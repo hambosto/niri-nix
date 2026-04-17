@@ -1,5 +1,4 @@
-{ inputs }:
-
+{ inputs, nixpkgs }:
 pkgs: {
   niri-unstable = pkgs.callPackage ./niri.nix {
     src = inputs.niri-unstable;

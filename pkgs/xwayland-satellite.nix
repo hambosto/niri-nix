@@ -9,7 +9,6 @@
   xcb-util-cursor,
   withSystemd ? true,
 }:
-
 let
   version = import ../lib/version.nix { };
 in

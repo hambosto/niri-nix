@@ -1,4 +1,9 @@
-{ kdl, makePackageSet }:
+{
+  inputs,
+  nixpkgs,
+  kdl,
+  makePackageSet,
+}:
 {
   config,
   pkgs,
@@ -7,7 +12,7 @@
 }:
 let
   cfg = config.programs.niri;
-  validatedConfig = import ../lib/validation.nix;
+  validatedConfig = import ../lib/validated-config.nix;
   finalConfig =
     if cfg.settings == null then
       null
