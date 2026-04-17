@@ -39,5 +39,14 @@ jobs:
       - name: Build and push niri-unstable to Cachix
         if: ${{ steps.update.outputs.pull-request-number != '' }}
         run: |
-          nix build .#packages.x86_64-linux.niri-unstable --no-link --print-build-logs
-          nix build .#packages.x86_64-linux.xwayland-satellite-unstable --no-link --print-build-logs
+          nix-store --query --requisites $(nix-store --query --deriver $(nix build --print-out-paths .#niri-unstable)) | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+          nix-store --query --requisites $(nix-store --query --deriver $(nix build --print-out-paths .#xwayland-satellite)) | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+
+      - name: Auto merge PR
+        if: ${{ steps.update.outputs.pull-request-number != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ steps.update.outputs.pull-request-number }} \
+            --squash \
+            --delete-branch
