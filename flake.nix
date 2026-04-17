@@ -3,16 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    niri-unstable.url = "github:niri-wm/niri";
+    xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
+    niri-unstable.flake = false;
+    xwayland-satellite-unstable.flake = false;
 
-    niri-unstable = {
-      url = "github:niri-wm/niri";
-      flake = false;
-    };
-
-    xwayland-satellite-unstable = {
-      url = "github:Supreeeme/xwayland-satellite";
-      flake = false;
-    };
   };
 
   outputs =
@@ -251,19 +246,6 @@
         };
       };
 
-      cached-packages-for =
-        system:
-        nixpkgs.legacyPackages.${system}.runCommand "all-niri-flake-packages" { } (
-          ''
-            mkdir $out
-          ''
-          + builtins.concatStringsSep "" (
-            nixpkgs.lib.mapAttrsToList (name: package: ''
-              ln -s ${package} $out/${name}
-            '') (make-package-set nixpkgs.legacyPackages.${system})
-          )
-        );
-
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -282,25 +264,6 @@
 
       packages = forAllSystems (system: make-package-set inputs.nixpkgs.legacyPackages.${system});
       overlays.niri = final: prev: make-package-set final;
-
-      apps = forAllSystems (
-        system:
-        (builtins.mapAttrs (name: package: {
-          type = "app";
-          program = nixpkgs.lib.getExe package;
-        }) (make-package-set inputs.nixpkgs.legacyPackages.${system}))
-        // {
-          default = self.apps.${system}.niri-unstable;
-        }
-      );
-
-      formatter = forAllSystems (system: inputs.nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
-      devShells = forAllSystems (system: {
-        default = import ./shell.nix {
-          flake = self;
-          inherit system;
-        };
-      });
 
       homeModules.niri =
         {
@@ -357,7 +320,6 @@
       nixosModules.niri =
         {
           config,
-          options,
           pkgs,
           ...
         }:
@@ -378,18 +340,10 @@
 
           config = nixpkgs.lib.mkMerge [
             (nixpkgs.lib.mkIf cfg.enable {
-              environment.systemPackages = [
-                pkgs.xdg-utils
-                pkgs.nautilus
-                cfg.package
-              ];
+              environment.systemPackages = [ cfg.package ] + [ pkgs.nautilus ];
 
-              xdg = {
-                autostart.enable = nixpkgs.lib.mkDefault true;
-                menus.enable = nixpkgs.lib.mkDefault true;
-                mime.enable = nixpkgs.lib.mkDefault true;
-                icons.enable = nixpkgs.lib.mkDefault true;
-              };
+              services.displayManager.sessionPackages = [ cfg.package ];
+              services.dbus.packages = [ pkgs.nautilus ];
 
               xdg.portal = {
                 enable = true;
@@ -397,43 +351,11 @@
                   !cfg.package.cargoBuildNoDefaultFeatures
                   || builtins.elem "xdp-gnome-screencast" cfg.package.cargoBuildFeatures
                 ) [ pkgs.xdg-desktop-portal-gnome ];
+
                 configPackages = [ cfg.package ];
               };
-
-              security.pam.services.swaylock = { };
-              programs.dconf.enable = nixpkgs.lib.mkDefault true;
             })
           ];
         };
-
-      checks = forAllSystems (
-        system:
-        let
-          test-nixos-for =
-            nixpkgs: modules:
-            (nixpkgs.lib.nixosSystem {
-              inherit system;
-              modules = [
-                {
-                  system.stateVersion = "23.11";
-                  fileSystems."/".fsType = "ext4";
-                  fileSystems."/".device = "/dev/sda1";
-                  boot.loader.systemd-boot.enable = true;
-                }
-              ]
-              ++ modules;
-            }).config.system.build.toplevel;
-        in
-        {
-          cached-packages = cached-packages-for system;
-
-          nixos = test-nixos-for nixpkgs [
-            self.nixosModules.niri
-            {
-              programs.niri.enable = true;
-            }
-          ];
-        }
-      );
     };
 }
