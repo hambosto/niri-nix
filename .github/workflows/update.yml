@@ -1,4 +1,4 @@
-name: Update flake.lock
+name: Update
 
 on:
   schedule:
@@ -38,4 +38,6 @@ jobs:
 
       - name: Build and push niri-unstable to Cachix
         if: ${{ steps.update.outputs.pull-request-number != '' }}
-        run: nix-store --query --requisites $(nix-store --query --deriver $(nix build --print-out-paths .#niri-unstable)) | cachix push niri
+        run: |
+          nix build .#packages.x86_64-linux.niri-unstable --no-link --print-build-logs
+          nix build .#packages.x86_64-linux.xwayland-satellite-unstable --no-link --print-build-logs
