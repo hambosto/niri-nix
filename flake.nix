@@ -344,10 +344,10 @@
             source =
               let
                 final-config =
-                  if builtins.isString cfg.config then
-                    cfg.config
-                  else if cfg.config != null then
-                    kdl.serialize.nodes cfg.config
+                  if builtins.isString cfg.settings then
+                    cfg.settings
+                  else if cfg.settings != null then
+                    kdl.serialize.nodes cfg.settings
                   else
                     null;
               in
