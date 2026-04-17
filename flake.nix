@@ -323,7 +323,7 @@
               default = (make-package-set pkgs).niri-unstable;
               description = "The niri package to use.";
             };
-            config = nixpkgs.lib.mkOption {
+            settings = nixpkgs.lib.mkOption {
               type = nixpkgs.lib.types.nullOr (
                 nixpkgs.lib.types.either nixpkgs.lib.types.str kdl.types.kdl-document
               );
