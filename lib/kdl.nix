@@ -35,8 +35,6 @@ let
       "\\"
       "\""
     ])
-    # including newlines will cause the serialized output to contain additional indentation
-    # so we escape them
     (lib.replaceStrings [ "\n" ] [ "\\n" ])
     (v: "\"${v}\"")
   ];
@@ -47,12 +45,6 @@ let
   serialize.null = lib.const "null";
 
   serialize.value = v: serialize.${builtins.typeOf v} v;
-
-  # this is not a complete list of valid identifiers
-  # but it is good enough for niri
-  # if this rejects a valid ident, literally nothing bad happens
-  # essentially, this regex boils down to any sequence of letters, numbers or +/-
-  # but not something that looks like a number (e.g. 0, -4, +12)
   bare-ident = "[A-Za-z][A-Za-z0-9+-]*|[+-]|[+-][A-Za-z+-][A-Za-z0-9+-]*";
   serialize.ident = v: if lib.strings.match bare-ident v != null then v else serialize.string v;
 
@@ -137,8 +129,7 @@ let
     name = "kdl-leaf";
     description = "kdl leaf";
     descriptionClass = "noun";
-    check =
-      v: lib.isAttrs v && lib.length (builtins.attrNames (builtins.removeAttrs v [ "__functor" ])) == 1;
+    check = v: lib.isAttrs v && lib.length (builtins.attrNames (removeAttrs v [ "__functor" ])) == 1;
     merge = lib.mergeUniqueOption {
       message = "";
       merge =
@@ -146,7 +137,7 @@ let
         let
           def = builtins.head defs;
 
-          name = builtins.head (builtins.attrNames (builtins.removeAttrs def.value [ "__functor" ]));
+          name = builtins.head (builtins.attrNames (removeAttrs def.value [ "__functor" ]));
 
           args = kdl-args.merge (loc ++ name) [
             {
