@@ -340,7 +340,7 @@
 
           config = nixpkgs.lib.mkMerge [
             (nixpkgs.lib.mkIf cfg.enable {
-              environment.systemPackages = [ cfg.package ] + [ pkgs.nautilus ];
+              environment.systemPackages = [ cfg.package ];
 
               services.displayManager.sessionPackages = [ cfg.package ];
               services.dbus.packages = [ pkgs.nautilus ];
