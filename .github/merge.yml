@@ -1,0 +1,6 @@
+pull_request_rules:
+  - name: Automatically merge when GitHub Actions jobs succeed
+    conditions: "author=github-actions[bot]"
+    actions:
+      merge:
+        method: merge
