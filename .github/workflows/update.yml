@@ -47,6 +47,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr merge ${{ steps.update.outputs.pull-request-number }} \
-            --squash \
-            --delete-branch
+          gh pr merge ${{ steps.update.outputs.pull-request-number }} --squash --delete-branch
