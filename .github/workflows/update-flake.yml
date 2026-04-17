@@ -12,6 +12,9 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Cachix
         uses: cachix/cachix-action@v17
         with:
