@@ -12,17 +12,18 @@ permissions:
 jobs:
   lockfile:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Set up Cachix
+      - name: Setup Cachix
         uses: cachix/cachix-action@v17
         with:
-          name: hambosto
+          name: ${{ secrets.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Update flake.lock
@@ -31,32 +32,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-msg: "Update flake.lock"
-          pr-body: |
-            ```
-            {{ env.GIT_COMMIT_MESSAGE }}
-            ```
           pr-labels: |
             dependencies
             automated
 
-      - name: Checkout repository
-        if: ${{ steps.update.outputs.pull-request-number }}
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Checkout CI branch
-        run: git checkout update_flake_lock_action
-        if: ${{ steps.update.outputs.pull-request-number }}
-
-      - name: Build niri-unstable ahead of time
+      - name: Build and push niri-unstable to Cachix
+        if: ${{ steps.update.outputs.pull-request-number != '' }}
         run: nix-store --query --requisites $(nix-store --query --deriver $(nix build --print-out-paths .#niri-unstable)) | cachix push niri
-        if: ${{ steps.update.outputs.pull-request-number }}
-
-      - name: Amend commit with human committer; ensure CI will run
-        run: git commit --amend --no-edit
-        if: ${{ steps.update.outputs.pull-request-number }}
-
-      - name: Force push changes to CI branch
-        run: git push origin update_flake_lock_action --force
-        if: ${{ steps.update.outputs.pull-request-number }}
