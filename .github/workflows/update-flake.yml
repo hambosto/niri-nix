@@ -13,11 +13,11 @@ jobs:
   lockfile:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
       - name: Set up Cachix
         uses: cachix/cachix-action@v17
@@ -29,6 +29,7 @@ jobs:
         id: update
         uses: DeterminateSystems/update-flake-lock@main
         with:
+          token: ${{ secrets.GH_TOKEN }}
           commit-msg: "Update flake.lock"
           pr-body: |
             ```
