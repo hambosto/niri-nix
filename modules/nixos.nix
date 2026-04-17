@@ -1,10 +1,15 @@
-{ makePackageSet }:
+{
+  inputs,
+  nixpkgs,
+  makePackageSet,
+}:
 {
   config,
   pkgs,
   lib,
   ...
 }:
+
 let
   cfg = config.programs.niri;
   hasScreencast =
