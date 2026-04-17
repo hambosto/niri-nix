@@ -12,7 +12,7 @@
 }:
 let
   cfg = config.programs.niri;
-  validatedConfig = import ../lib/validated-config.nix;
+  validatedConfig = import ../lib/validation.nix;
   finalConfig =
     if cfg.settings == null then
       null
