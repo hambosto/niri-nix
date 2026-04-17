@@ -339,7 +339,7 @@
           };
 
           config.xdg.configFile.niri-config = {
-            enable = cfg.config != null;
+            enable = cfg.settings != null;
             target = "niri/config.kdl";
             source =
               let
