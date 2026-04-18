@@ -1,0 +1,19 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index b1cf246..3cf45cc 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -152,9 +152,11 @@ dinit = []
+ new_without_default = "allow"
+ 
+ [profile.release]
+-debug = "line-tables-only"
+-overflow-checks = true
+-lto = "thin"
++opt-level = 3
++lto = "fat"
++codegen-units = 1
++panic = "abort"
++strip = true
+ 
+ [profile.release.package.niri-config]
+ # knuffel with chomsky generates a metric ton of debuginfo.

@@ -67,7 +67,6 @@ rustPlatform.buildRustPackage {
     ++ lib.optional withSystemd "systemd";
 
   passthru.providedSessions = [ "niri" ];
-  dontStrip = true;
 
   RUSTFLAGS = [
     "-C link-arg=-Wl,--push-state,--no-as-needed"
@@ -93,7 +92,7 @@ rustPlatform.buildRustPackage {
   postInstall =
     lib.optionalString (withSystemd || withDinit) ''
       install -Dm0755 resources/niri-session -t $out/bin
-      install -Dm0644 resources/niri.desktop  -t $out/share/wayland-sessions
+      install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
     ''
     + lib.optionalString (withDbus || withScreencastSupport || withSystemd) ''
       install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
