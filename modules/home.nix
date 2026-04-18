@@ -1,13 +1,13 @@
+{ self, kdl }:
 {
   config,
-  inputs,
   lib,
   pkgs,
   ...
 }:
 let
   cfg = config.programs.niri;
-  inherit (inputs.niri-utils.lib.kdl) types serialize;
+  inherit (kdl) types serialize;
 in
 {
   options.programs.niri = {
@@ -15,34 +15,33 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
       description = "The niri package to use.";
     };
 
     settings = lib.mkOption {
-      type = types.kdl-document;
-      default = { };
+      type = types.kdlDocument;
+      default = [ ];
       description = ''
-        Niri configuration.
-
-        A KDL document attrset that is serialised via the kdl library
-        and validated with `niri validate` at build time.
+        Niri configuration as a KDL document attrset, serialised via
+        the kdl library and validated with `niri validate` at build time.
       '';
     };
   };
 
-  config.xdg.configFile.config = lib.mkIf (cfg.enable && cfg.settings != { }) {
-    enable = true;
-    target = "niri/config.kdl";
-    source =
-      pkgs.runCommand "config.kdl"
-        {
-          config = serialize.nodes cfg.settings;
-          passAsFile = [ "config" ];
-          buildInputs = [ cfg.package ];
-        }
-        ''
-          niri validate -c $configPath
-          cp $configPath $out
-        '';
+  config = lib.mkIf cfg.enable {
+    xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
+      source =
+        pkgs.runCommand "niri-config.kdl"
+          {
+            config = serialize.nodes cfg.settings;
+            passAsFile = [ "config" ];
+            buildInputs = [ cfg.package ];
+          }
+          ''
+            niri validate -c $configPath
+            cp $configPath $out
+          '';
+    };
   };
 }

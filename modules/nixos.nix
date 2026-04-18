@@ -1,3 +1,4 @@
+{ self }:
 {
   config,
   pkgs,
@@ -15,12 +16,16 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
       description = "The niri package to use.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ cfg.package ] ++ [ pkgs.nautilus ];
+    environment.systemPackages = [
+      cfg.package
+      pkgs.nautilus
+    ];
 
     services.displayManager.sessionPackages = [ cfg.package ];
     services.dbus.packages = [ pkgs.nautilus ];

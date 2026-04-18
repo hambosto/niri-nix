@@ -1,13 +1,11 @@
 {
   lib,
   src,
-  patches ? [ ],
   rustPlatform,
   pkg-config,
   makeWrapper,
   xwayland,
   xcb-util-cursor,
-  withSystemd ? true,
 }:
 let
   fmtDate =
@@ -23,7 +21,7 @@ rustPlatform.buildRustPackage {
   pname = "xwayland-satellite";
   version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
 
-  inherit src patches;
+  inherit src;
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
@@ -39,7 +37,7 @@ rustPlatform.buildRustPackage {
   buildInputs = [ xcb-util-cursor ];
 
   buildNoDefaultFeatures = true;
-  buildFeatures = lib.optional withSystemd "systemd";
+  buildFeatures = [ "systemd" ];
 
   doCheck = false;
 
@@ -48,12 +46,10 @@ rustPlatform.buildRustPackage {
   postInstall = ''
     wrapProgram $out/bin/xwayland-satellite \
       --prefix PATH : "${lib.makeBinPath [ xwayland ]}"
-  ''
-  + lib.optionalString withSystemd ''
     install -Dm0644 resources/xwayland-satellite.service -t $out/lib/systemd/user
   '';
 
-  postFixup = lib.optionalString withSystemd ''
+  postFixup = ''
     substituteInPlace $out/lib/systemd/user/xwayland-satellite.service \
       --replace-fail /usr/local/bin $out/bin
   '';

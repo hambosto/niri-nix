@@ -4,57 +4,56 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
-    niri-utils = {
-      url = "github:sodiboo/niri-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.niri-unstable.follows = "";
-      inputs.xwayland-satellite-unstable.follows = "";
-      inputs.niri-stable.follows = "";
-      inputs.xwayland-satellite-stable.follows = "";
-      inputs.nixpkgs-stable.follows = "";
+
+    niri-unstable = {
+      url = "github:niri-wm/niri";
+      flake = false;
     };
 
-    niri-unstable.url = "github:niri-wm/niri";
-    niri-unstable.flake = false;
-
-    xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
-    xwayland-satellite-unstable.flake = false;
+    xwayland-satellite-unstable = {
+      url = "github:Supreeeme/xwayland-satellite";
+      flake = false;
+    };
   };
 
   outputs =
-    inputs@{
+    {
       self,
       nixpkgs,
       systems,
-      niri-utils,
       niri-unstable,
       xwayland-satellite-unstable,
       ...
     }:
     let
-      forAllSystems = f: nixpkgs.lib.genAttrs (import systems) f;
+      lib = nixpkgs.lib;
+      eachSystem = lib.genAttrs (import systems);
       pkgsFor = system: nixpkgs.legacyPackages.${system};
-    in
-    {
-      packages = forAllSystems (system: {
-        niri-unstable = (pkgsFor system).callPackage ./pkgs/niri.nix { src = niri-unstable; };
-        xwayland-satellite-unstable = (pkgsFor system).callPackage ./pkgs/xwayland-satellite.nix {
-          src = xwayland-satellite-unstable;
-        };
-      });
+      kdl = import ./kdl.nix { inherit lib; };
 
-      overlays.niri = final: _prev: {
+      overlay = final: _prev: {
         niri-unstable = final.callPackage ./pkgs/niri.nix { src = niri-unstable; };
         xwayland-satellite-unstable = final.callPackage ./pkgs/xwayland-satellite.nix {
           src = xwayland-satellite-unstable;
         };
       };
 
-      homeModules.niri = import ./modules/home.nix { inherit inputs; };
-      nixosModules.niri = import ./modules/nixos.nix;
+    in
+    {
+      packages = eachSystem (
+        system:
+        let
+          pkgs = (pkgsFor system).extend overlay;
+        in
+        {
+          inherit (pkgs) niri-unstable xwayland-satellite-unstable;
+        }
+      );
 
-      lib = {
-        kdl = niri-utils.lib.kdl;
-      };
+      overlays.default = overlay;
+      homeModules.niri = import ./modules/home.nix { inherit self kdl; };
+      nixosModules.niri = import ./modules/nixos.nix { inherit self; };
+
+      lib = { inherit kdl; };
     };
 }
