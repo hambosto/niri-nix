@@ -42,7 +42,7 @@ jobs:
         run: |
           nix build -L .#niri-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
-      - name: Build and push xwayland-satellite to Cachix cache
+      - name: Build and push xwayland-satellite-unstable to Cachix cache
         if: ${{ steps.update.outputs.pull-request-number != '' }}
         run: |
           nix build -L .#xwayland-satellite-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
