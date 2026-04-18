@@ -1,57 +1,49 @@
 {
-  inputs,
-  nixpkgs,
-  kdl,
-  makePackageSet,
-}:
-{
   config,
-  pkgs,
+  inputs,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.programs.niri;
-  validatedConfig = import ../lib/validation.nix;
-  finalConfig =
-    if cfg.settings == null then
-      null
-    else if builtins.isString cfg.settings then
-      cfg.settings
-    else
-      kdl.serialize.nodes cfg.settings;
 in
 {
-  options.programs.niri = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = (makePackageSet pkgs).niri-unstable;
-      description = "The niri package to use.";
-    };
+  options.programs.niri = lib.mkOption {
+    type = lib.types.submodule {
+      options = {
+        package = lib.mkOption {
+          type = lib.types.package;
+          description = "The niri package to use.";
+        };
 
-    settings = lib.mkOption {
-      type = lib.types.nullOr (lib.types.either lib.types.str kdl.types.kdlDocument);
-      default = null;
-      description = ''
-        Niri configuration.
+        settings = lib.mkOption {
+          type = inputs.niri-flake.lib.kdl.types.kdl-document;
+          default = { };
+          description = ''
+            Niri configuration.
 
-        - `null`   – no config file is generated.
-        - `string` – used verbatim as the config file contents.
-        - KDL document attrset – serialised via the kdl library before use.
-
-        In all non-null cases the config is validated with `niri validate`
-        at build time.
-      '';
+            A KDL document attrset that is serialised via the kdl library
+            and validated with `niri validate` at build time.
+          '';
+        };
+      };
     };
   };
 
-  config.xdg.configFile.niri-config = lib.mkIf (cfg.settings != null) {
+  config.xdg.configFile.config = lib.mkIf (cfg.settings != { }) {
     enable = true;
     target = "niri/config.kdl";
-    source = validatedConfig {
-      inherit pkgs;
-      package = cfg.package;
-      config = finalConfig;
-    };
+    source =
+      pkgs.runCommand "config.kdl"
+        {
+          config = inputs.niri-flake.lib.kdl.serialize.nodes cfg.settings;
+          passAsFile = [ "config" ];
+          buildInputs = [ cfg.package ];
+        }
+        ''
+          niri validate -c $configPath
+          cp $configPath $out
+        '';
   };
 }

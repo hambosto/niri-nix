@@ -10,11 +10,18 @@
   withSystemd ? true,
 }:
 let
-  version = import ../lib/version.nix { };
+  fmtDate =
+    raw:
+    let
+      year = builtins.substring 0 4 raw;
+      month = builtins.substring 4 2 raw;
+      day = builtins.substring 6 2 raw;
+    in
+    "${year}-${month}-${day}";
 in
 rustPlatform.buildRustPackage {
   pname = "xwayland-satellite";
-  version = version.packageVersion src;
+  version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
 
   inherit src patches;
 
@@ -36,7 +43,7 @@ rustPlatform.buildRustPackage {
 
   doCheck = false;
 
-  VERGEN_GIT_DESCRIBE = version.versionString src;
+  VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
   postInstall = ''
     wrapProgram $out/bin/xwayland-satellite \

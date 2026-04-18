@@ -24,11 +24,18 @@
 }:
 
 let
-  version = import ../lib/version.nix { };
+  fmtDate =
+    raw:
+    let
+      year = builtins.substring 0 4 raw;
+      month = builtins.substring 4 2 raw;
+      day = builtins.substring 6 2 raw;
+    in
+    "${year}-${month}-${day}";
 in
 rustPlatform.buildRustPackage {
   pname = "niri";
-  version = version.packageVersion src;
+  version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
 
   inherit src patches;
 
@@ -78,7 +85,7 @@ rustPlatform.buildRustPackage {
     "-C debuginfo=line-tables-only"
   ];
 
-  NIRI_BUILD_VERSION_STRING = version.versionString src;
+  NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
   outputs = [
     "out"
