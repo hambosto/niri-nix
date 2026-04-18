@@ -1,14 +1,18 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
 }:
 let
   cfg = config.programs.niri;
+  inherit (inputs.niri-utils.lib.kdl) types serialize;
 in
 {
   options.programs.niri = lib.mkOption {
+    enable = lib.mkEnableOption "Niri window manager";
+
     type = lib.types.submodule {
       options = {
         package = lib.mkOption {
@@ -17,7 +21,7 @@ in
         };
 
         settings = lib.mkOption {
-          type = lib.kdl.types.kdl-document;
+          type = types.kdl-document;
           default = { };
           description = ''
             Niri configuration.
@@ -30,13 +34,13 @@ in
     };
   };
 
-  config.xdg.configFile.config = lib.mkIf (cfg.settings != { }) {
+  config.xdg.configFile.config = lib.mkIf (cfg.enable && cfg.settings != { }) {
     enable = true;
     target = "niri/config.kdl";
     source =
       pkgs.runCommand "config.kdl"
         {
-          config = lib.kdl.serialize.nodes cfg.settings;
+          config = serialize.nodes cfg.settings;
           passAsFile = [ "config" ];
           buildInputs = [ cfg.package ];
         }
