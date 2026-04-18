@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
       source =
-        pkgs.runCommand "niri-config.kdl"
+        pkgs.runCommand "config.kdl"
           {
             config = serialize.nodes cfg.settings;
             passAsFile = [ "config" ];
