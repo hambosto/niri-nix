@@ -1,20 +1,12 @@
-{
-  inputs,
-  nixpkgs,
-  makePackageSet,
-}:
+{ self }:
 {
   config,
   pkgs,
   lib,
   ...
 }:
-
 let
   cfg = config.programs.niri;
-  hasScreencast =
-    !cfg.package.cargoBuildNoDefaultFeatures
-    || builtins.elem "xdp-gnome-screencast" cfg.package.cargoBuildFeatures;
 in
 {
   disabledModules = [ "programs/wayland/niri.nix" ];
@@ -24,7 +16,7 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
-      default = (makePackageSet pkgs).niri-unstable;
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
       description = "The niri package to use.";
     };
   };
@@ -41,7 +33,10 @@ in
     xdg.portal = {
       enable = true;
       configPackages = [ cfg.package ];
-      extraPortals = lib.mkIf hasScreencast [ pkgs.xdg-desktop-portal-gnome ];
+      extraPortals = lib.mkIf (
+        !cfg.package.cargoBuildNoDefaultFeatures
+        || builtins.elem "xdp-gnome-screencast" cfg.package.cargoBuildFeatures
+      ) [ pkgs.xdg-desktop-portal-gnome ];
     };
   };
 }

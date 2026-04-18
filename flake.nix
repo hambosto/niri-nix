@@ -5,44 +5,55 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
 
-    niri-unstable.url = "github:niri-wm/niri";
-    niri-unstable.flake = false;
+    niri-unstable = {
+      url = "github:niri-wm/niri";
+      flake = false;
+    };
 
-    xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
-    xwayland-satellite-unstable.flake = false;
+    xwayland-satellite-unstable = {
+      url = "github:Supreeeme/xwayland-satellite";
+      flake = false;
+    };
   };
 
   outputs =
-    inputs@{
+    {
       self,
       nixpkgs,
       systems,
+      niri-unstable,
+      xwayland-satellite-unstable,
       ...
     }:
     let
       lib = nixpkgs.lib;
-      forAllSystems = lib.genAttrs (import systems);
-      kdl = import ./lib/kdl.nix { inherit lib; };
-      makePackageSet = import ./pkgs { inherit inputs nixpkgs; };
-    in
-    {
-      lib = {
-        inherit kdl;
-        internal = { inherit makePackageSet; };
+      eachSystem = lib.genAttrs (import systems);
+      pkgsFor = system: nixpkgs.legacyPackages.${system};
+      kdl = import ./kdl.nix { inherit lib; };
+
+      overlay = final: _prev: {
+        niri-unstable = final.callPackage ./pkgs/niri.nix { src = niri-unstable; };
+        xwayland-satellite-unstable = final.callPackage ./pkgs/xwayland-satellite.nix {
+          src = xwayland-satellite-unstable;
+        };
       };
 
-      packages = forAllSystems (system: makePackageSet nixpkgs.legacyPackages.${system});
-      overlays.niri = final: _prev: makePackageSet final;
-      homeModules.niri = import ./modules/home.nix {
-        inherit
-          inputs
-          nixpkgs
-          kdl
-          makePackageSet
-          ;
-      };
-      nixosModules.niri = import ./modules/nixos.nix {
-        inherit inputs nixpkgs makePackageSet;
-      };
+    in
+    {
+      packages = eachSystem (
+        system:
+        let
+          pkgs = (pkgsFor system).extend overlay;
+        in
+        {
+          inherit (pkgs) niri-unstable xwayland-satellite-unstable;
+        }
+      );
+
+      overlays.niri = overlay;
+      homeModules.niri = import ./modules/home.nix { inherit self kdl; };
+      nixosModules.niri = import ./modules/nixos.nix { inherit self; };
+
+      lib = { inherit kdl; };
     };
 }

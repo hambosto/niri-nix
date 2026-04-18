@@ -1,57 +1,47 @@
-{
-  inputs,
-  nixpkgs,
-  kdl,
-  makePackageSet,
-}:
+{ self, kdl }:
 {
   config,
-  pkgs,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.programs.niri;
-  validatedConfig = import ../lib/validation.nix;
-  finalConfig =
-    if cfg.settings == null then
-      null
-    else if builtins.isString cfg.settings then
-      cfg.settings
-    else
-      kdl.serialize.nodes cfg.settings;
+  inherit (kdl) types serialize;
 in
 {
   options.programs.niri = {
+    enable = lib.mkEnableOption "niri";
+
     package = lib.mkOption {
       type = lib.types.package;
-      default = (makePackageSet pkgs).niri-unstable;
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
       description = "The niri package to use.";
     };
 
     settings = lib.mkOption {
-      type = lib.types.nullOr (lib.types.either lib.types.str kdl.types.kdlDocument);
-      default = null;
+      type = types.kdlDocument;
+      default = [ ];
       description = ''
-        Niri configuration.
-
-        - `null`   – no config file is generated.
-        - `string` – used verbatim as the config file contents.
-        - KDL document attrset – serialised via the kdl library before use.
-
-        In all non-null cases the config is validated with `niri validate`
-        at build time.
+        Niri configuration as a KDL document attrset, serialised via
+        the kdl library and validated with `niri validate` at build time.
       '';
     };
   };
 
-  config.xdg.configFile.niri-config = lib.mkIf (cfg.settings != null) {
-    enable = true;
-    target = "niri/config.kdl";
-    source = validatedConfig {
-      inherit pkgs;
-      package = cfg.package;
-      config = finalConfig;
+  config = lib.mkIf cfg.enable {
+    xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
+      source =
+        pkgs.runCommand "niri-config.kdl"
+          {
+            config = serialize.nodes cfg.settings;
+            passAsFile = [ "config" ];
+            buildInputs = [ cfg.package ];
+          }
+          ''
+            niri validate -c $configPath
+            cp $configPath $out
+          '';
     };
   };
 }
