@@ -13,7 +13,6 @@ jobs:
   lockfile:
     name: Update Flake Lock & Cache Builds
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
