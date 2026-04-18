@@ -16,6 +16,31 @@
         "type": "github"
       }
     },
+    "niri-utils": {
+      "inputs": {
+        "niri-stable": [],
+        "niri-unstable": [],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-stable": [],
+        "xwayland-satellite-stable": [],
+        "xwayland-satellite-unstable": []
+      },
+      "locked": {
+        "lastModified": 1776509722,
+        "narHash": "sha256-oHVMjAMBukYnGeEE0EtCQsx8cNRv8WadHD8ZV3oZFSM=",
+        "owner": "sodiboo",
+        "repo": "niri-flake",
+        "rev": "f8cc32a3aba29fdacd06d80b0986028cfd413a22",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sodiboo",
+        "repo": "niri-flake",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1776169885,
@@ -35,6 +60,7 @@
     "root": {
       "inputs": {
         "niri-unstable": "niri-unstable",
+        "niri-utils": "niri-utils",
         "nixpkgs": "nixpkgs",
         "systems": "systems",
         "xwayland-satellite-unstable": "xwayland-satellite-unstable"

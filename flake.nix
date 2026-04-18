@@ -4,7 +4,15 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
-    niri-utils.url = "github:sodiboo/niri-flake";
+    niri-utils = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.niri-unstable.follows = "";
+      inputs.xwayland-satellite-unstable.follows = "";
+      inputs.niri-stable.follows = "";
+      inputs.xwayland-satellite-stable.follows = "";
+      inputs.nixpkgs-stable.follows = "";
+    };
 
     niri-unstable.url = "github:niri-wm/niri";
     niri-unstable.flake = false;
