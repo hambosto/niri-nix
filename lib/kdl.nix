@@ -1,104 +1,103 @@
 { lib, ... }:
 let
-  fold-args =
+  foldArgs =
     lib.foldl
       (
-        self: arg:
+        acc: arg:
         if lib.isAttrs arg then
-          self // { properties = self.properties // arg; }
+          acc // { properties = acc.properties // arg; }
         else
-          self // { arguments = self.arguments ++ [ arg ]; }
+          acc // { arguments = acc.arguments ++ [ arg ]; }
       )
       {
         arguments = [ ];
         properties = { };
       };
+
   node = name: args: children: {
-    inherit name;
-    inherit (fold-args (lib.toList args)) arguments properties;
-    inherit children;
+    inherit name children;
+    inherit (foldArgs (lib.toList args)) arguments properties;
   };
 
   plain = name: node name [ ];
   leaf = name: args: node name args [ ];
-  magic-leaf = node-name: {
-    ${node-name} = [ ];
-    __functor = self: arg: {
-      inherit (self) __functor;
-      ${node-name} = self.${node-name} ++ lib.toList arg;
-    };
-  };
   flag = name: node name [ ] [ ];
 
-  serialize.string = lib.flip lib.pipe [
+  magicLeaf = nodeName: {
+    ${nodeName} = [ ];
+    __functor = self: arg: self // { ${nodeName} = self.${nodeName} ++ lib.toList arg; };
+  };
+
+  bareIdentRe = "[A-Za-z][A-Za-z0-9+-]*|[+-]|[+-][A-Za-z+-][A-Za-z0-9+-]*";
+  serializeString = lib.flip lib.pipe [
     (lib.escape [
       "\\"
       "\""
     ])
     (lib.replaceStrings [ "\n" ] [ "\\n" ])
-    (v: "\"${v}\"")
+    (s: "\"${s}\"")
   ];
-  serialize.path = serialize.string;
-  serialize.int = toString;
-  serialize.float = toString;
-  serialize.bool = v: if v then "true" else "false";
-  serialize.null = lib.const "null";
 
-  serialize.value = v: serialize.${builtins.typeOf v} v;
-  bare-ident = "[A-Za-z][A-Za-z0-9+-]*|[+-]|[+-][A-Za-z+-][A-Za-z0-9+-]*";
-  serialize.ident = v: if lib.strings.match bare-ident v != null then v else serialize.string v;
-
-  serialize.prop =
+  serializeIdent = v: if lib.strings.match bareIdentRe v != null then v else serializeString v;
+  serializeValue =
+    v:
     {
-      name,
-      value,
-    }:
-    "${serialize.ident name}=${serialize.value value}";
+      string = serializeString;
+      path = serializeString;
+      int = toString;
+      float = toString;
+      bool = b: if b then "true" else "false";
+      null = lib.const "null";
+    }
+    .${builtins.typeOf v}
+    v;
 
-  single-indent = "    ";
+  serializeProp = { name, value }: "${serializeIdent name}=${serializeValue value}";
 
-  should-collapse =
+  indent = "    ";
+
+  shouldCollapse =
     children:
     let
-      length = lib.length children;
+      n = lib.length children;
     in
-    length == 0 || (length == 1 && should-collapse (lib.head children).children);
+    n == 0 || (n == 1 && shouldCollapse (lib.head children).children);
 
-  serialize.node = serialize.node-with "";
-  serialize.node-with =
-    indent:
+  serializeNode = serializeNodeWith "";
+  serializeNodeWith =
+    pfx:
     {
       name,
       arguments,
       properties,
       children,
     }:
-    indent
+    pfx
     + lib.concatStringsSep " " (
       lib.flatten [
-        (serialize.ident name)
-        (map serialize.value arguments)
-        (map serialize.prop (lib.attrsToList properties))
+        (serializeIdent name)
+        (map serializeValue arguments)
+        (map serializeProp (lib.attrsToList properties))
         (
-          if lib.length children == 0 then
+          if children == [ ] then
             [ ]
-          else if should-collapse children then
-            "{ ${serialize.nodes children}; }"
+          else if shouldCollapse children then
+            "{ ${serializeNodes children}; }"
           else
-            "{\n${serialize.nodes-with (indent + single-indent) children}\n${indent}}"
+            "{\n${serializeNodesWith (pfx + indent) children}\n${pfx}}"
         )
       ]
     );
 
-  serialize.nodes = serialize.nodes-with "";
-  serialize.nodes-with =
-    indent:
+  serializeNodes = serializeNodesWith "";
+  serializeNodesWith =
+    pfx:
     lib.flip lib.pipe [
-      (map (serialize.node-with indent))
+      (map (serializeNodeWith pfx))
       (lib.concatStringsSep "\n")
     ];
 
-  kdl-value = lib.types.nullOr (
+  kdlValue = lib.types.nullOr (
     lib.types.oneOf [
       lib.types.str
       lib.types.int
@@ -107,25 +106,25 @@ let
     ]
   );
 
-  kdl-node = lib.types.submodule {
-    options.name = lib.mkOption {
-      type = lib.types.str;
-    };
-    options.arguments = lib.mkOption {
-      type = lib.types.listOf kdl-value;
-      default = [ ];
-    };
-    options.properties = lib.mkOption {
-      type = lib.types.attrsOf kdl-value;
-      default = { };
-    };
-    options.children = lib.mkOption {
-      type = kdl-document;
-      default = [ ];
+  kdlNode = lib.types.submodule {
+    options = {
+      name = lib.mkOption { type = lib.types.str; };
+      arguments = lib.mkOption {
+        type = lib.types.listOf kdlValue;
+        default = [ ];
+      };
+      properties = lib.mkOption {
+        type = lib.types.attrsOf kdlValue;
+        default = { };
+      };
+      children = lib.mkOption {
+        type = kdlDocument;
+        default = [ ];
+      };
     };
   };
 
-  kdl-leaf = lib.mkOptionType {
+  kdlLeaf = lib.mkOptionType {
     name = "kdl-leaf";
     description = "kdl leaf";
     descriptionClass = "noun";
@@ -133,83 +132,93 @@ let
     merge = lib.mergeUniqueOption {
       message = "";
       merge =
-        loc: defs:
+        _loc: defs:
         let
           def = builtins.head defs;
-
           name = builtins.head (builtins.attrNames (removeAttrs def.value [ "__functor" ]));
-
-          args = kdl-args.merge (loc ++ name) [
+        in
+        {
+          ${name} = kdlArgs.merge ([ ] ++ [ name ]) [
             {
               inherit (def) file;
               value = def.value.${name};
             }
           ];
-        in
-        {
-          ${name} = args;
         };
     };
   };
 
-  kdl-args =
+  kdlArgs =
     let
-      arg = lib.types.either (lib.types.attrsOf kdl-value) kdl-value;
+      arg = lib.types.either (lib.types.attrsOf kdlValue) kdlValue;
       args = lib.types.either (lib.types.listOf arg) arg;
     in
     lib.mkOptionType {
       name = "kdl-args";
       description = "kdl arguments";
       descriptionClass = "noun";
-
       inherit (lib.types.uniq args) check merge;
     };
 
-  kdl-nodes = lib.types.listOf kdl-node // {
+  kdlNodes = lib.types.listOf kdlNode // {
     name = "kdl-nodes";
     description = "kdl nodes";
     descriptionClass = "noun";
   };
 
-  kdl-document = lib.mkOptionType {
+  kdlDocument = lib.mkOptionType {
     name = "kdl-document";
     description = "kdl document";
     descriptionClass = "noun";
-
     check = v: builtins.isList v || builtins.isAttrs v;
     merge =
       loc: defs:
-      kdl-nodes.merge loc (
-        map (def: {
-          inherit (def) file;
-          value =
-            let
-              value' = lib.remove null (lib.flatten def.value);
-            in
-            lib.warnIf (def.value != value')
-              "kdl document defined in `${def.file}` for `${lib.showOption loc}` is not normalized. please ensure that it is a flat list of nodes."
-              value';
-        }) defs
+      kdlNodes.merge loc (
+        map (
+          def:
+          let
+            normalized = lib.remove null (lib.flatten def.value);
+          in
+          {
+            inherit (def) file;
+            value =
+              lib.warnIf (def.value != normalized)
+                "kdl document defined in `${def.file}` for `${lib.showOption loc}` is not normalized. \
+             Please ensure it is a flat list of nodes."
+                normalized;
+          }
+        ) defs
       );
   };
+
 in
 {
   inherit
     node
     plain
     leaf
-    magic-leaf
     flag
-    serialize
     ;
+  magicLeaf = magicLeaf;
+
+  serialize = {
+    node = serializeNode;
+    nodeWith = serializeNodeWith;
+    nodes = serializeNodes;
+    nodesWith = serializeNodesWith;
+    value = serializeValue;
+    ident = serializeIdent;
+    prop = serializeProp;
+  };
+
   types = {
     inherit
-      kdl-value
-      kdl-node
-      kdl-nodes
-      kdl-leaf
-      kdl-args
-      kdl-document
+      kdlValue
+      kdlNode
+      kdlNodes
+      kdlLeaf
+      kdlArgs
+      kdlDocument
       ;
   };
 }
