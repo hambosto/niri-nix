@@ -9,7 +9,6 @@
   lib,
   ...
 }:
-
 let
   cfg = config.programs.niri;
   hasScreencast =
@@ -41,7 +40,10 @@ in
     xdg.portal = {
       enable = true;
       configPackages = [ cfg.package ];
-      extraPortals = lib.mkIf hasScreencast [ pkgs.xdg-desktop-portal-gnome ];
+      extraPortals = lib.mkIf (
+        !cfg.package.cargoBuildNoDefaultFeatures
+        || builtins.elem "xdp-gnome-screencast" cfg.package.cargoBuildFeatures
+      ) [ pkgs.xdg-desktop-portal-gnome ];
     };
   };
 }

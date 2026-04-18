@@ -3,7 +3,6 @@
   package,
   config,
 }:
-
 pkgs.runCommand "config.kdl"
   {
     inherit config;

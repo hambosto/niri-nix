@@ -1,4 +1,3 @@
-{ }:
 let
   year = builtins.substring 0 4;
   month = builtins.substring 4 2;

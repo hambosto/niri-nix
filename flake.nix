@@ -13,36 +13,28 @@
   };
 
   outputs =
-    inputs@{
+    {
       self,
       nixpkgs,
       systems,
       ...
     }:
     let
-      lib = nixpkgs.lib;
-      forAllSystems = lib.genAttrs (import systems);
-      kdl = import ./lib/kdl.nix { inherit lib; };
-      makePackageSet = import ./pkgs { inherit inputs nixpkgs; };
+      forAllSystems = f: nixpkgs.lib.genAttrs (import systems) f;
+      pkgsFor = system: nixpkgs.legacyPackages.${system};
     in
     {
-      lib = {
-        inherit kdl;
-        internal = { inherit makePackageSet; };
+      packages = forAllSystems (system: {
+        niri-unstable = (pkgsFor system).callPackage ./pkgs/niri.nix { };
+        xwayland-satellite-unstable = (pkgsFor system).callPackage ./pkgs/xwayland-satellite.nix { };
+      });
+
+      overlays.niri = final: _prev: {
+        niri-unstable = final.callPackage ./pkgs/niri.nix { };
+        xwayland-satellite-unstable = final.callPackage ./pkgs/xwayland-satellite.nix { };
       };
 
-      packages = forAllSystems (system: makePackageSet nixpkgs.legacyPackages.${system});
-      overlays.niri = final: _prev: makePackageSet final;
-      homeModules.niri = import ./modules/home.nix {
-        inherit
-          inputs
-          nixpkgs
-          kdl
-          makePackageSet
-          ;
-      };
-      nixosModules.niri = import ./modules/nixos.nix {
-        inherit inputs nixpkgs makePackageSet;
-      };
+      homeModules.niri = import ./modules/home.nix { };
+      nixosModules.niri = import ./modules/nixos.nix { };
     };
 }
