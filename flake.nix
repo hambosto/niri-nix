@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
-    niri-flake.url = "github:sodiboo/niri-flake";
+    niri-utils.url = "github:sodiboo/niri-flake";
 
     niri-unstable.url = "github:niri-wm/niri";
     niri-unstable.flake = false;

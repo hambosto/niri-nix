@@ -18,7 +18,7 @@ in
         };
 
         settings = lib.mkOption {
-          type = inputs.niri-flake.lib.kdl.types.kdl-document;
+          type = inputs.niri-utils.lib.kdl.types.kdl-document;
           default = { };
           description = ''
             Niri configuration.
@@ -37,7 +37,7 @@ in
     source =
       pkgs.runCommand "config.kdl"
         {
-          config = inputs.niri-flake.lib.kdl.serialize.nodes cfg.settings;
+          config = inputs.niri-utils.lib.kdl.serialize.nodes cfg.settings;
           passAsFile = [ "config" ];
           buildInputs = [ cfg.package ];
         }
