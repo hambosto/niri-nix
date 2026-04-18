@@ -1,6 +1,5 @@
 {
   config,
-  inputs,
   lib,
   pkgs,
   ...
@@ -18,7 +17,7 @@ in
         };
 
         settings = lib.mkOption {
-          type = inputs.niri-utils.lib.kdl.types.kdl-document;
+          type = lib.kdl.types.kdl-document;
           default = { };
           description = ''
             Niri configuration.
@@ -37,7 +36,7 @@ in
     source =
       pkgs.runCommand "config.kdl"
         {
-          config = inputs.niri-utils.lib.kdl.serialize.nodes cfg.settings;
+          config = lib.kdl.serialize.nodes cfg.settings;
           passAsFile = [ "config" ];
           buildInputs = [ cfg.package ];
         }

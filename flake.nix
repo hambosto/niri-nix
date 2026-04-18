@@ -26,6 +26,7 @@
       self,
       nixpkgs,
       systems,
+      niri-utils,
       niri-unstable,
       xwayland-satellite-unstable,
       ...
@@ -51,5 +52,9 @@
 
       homeModules.niri = import ./modules/home.nix;
       nixosModules.niri = import ./modules/nixos.nix;
+
+      lib = {
+        kdl = niri-utils.lib.kdl;
+      };
     };
 }
