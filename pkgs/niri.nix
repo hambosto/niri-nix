@@ -66,6 +66,8 @@ rustPlatform.buildRustPackage {
 
   doCheck = false;
 
+  patches = [ ../patches/niri-release.patch ];
+
   passthru.providedSessions = [ "niri" ];
 
   RUSTFLAGS = [

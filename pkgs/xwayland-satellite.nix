@@ -41,6 +41,8 @@ rustPlatform.buildRustPackage {
 
   doCheck = false;
 
+  patches = [ ../patches/xwayland-release.patch ];
+
   VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
   postInstall = ''
