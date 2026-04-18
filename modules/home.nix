@@ -30,7 +30,7 @@ in
     };
 
     settings = lib.mkOption {
-      type = lib.types.nullOr (lib.types.either lib.types.str kdl.types.kdl-document);
+      type = lib.types.nullOr (lib.types.either lib.types.str kdl.types.kdlDocument);
       default = null;
       description = ''
         Niri configuration.
