@@ -11,25 +11,23 @@ let
 in
 {
   options.programs.niri = lib.mkOption {
-    enable = lib.mkEnableOption "Niri window manager";
+    enable = lib.mkEnableOption "niri";
 
-    type = lib.types.submodule {
-      options = {
-        package = lib.mkOption {
-          type = lib.types.package;
-          description = "The niri package to use.";
-        };
+    options = {
+      package = lib.mkOption {
+        type = lib.types.package;
+        description = "The niri package to use.";
+      };
 
-        settings = lib.mkOption {
-          type = types.kdl-document;
-          default = { };
-          description = ''
-            Niri configuration.
+      settings = lib.mkOption {
+        type = types.kdl-document;
+        default = { };
+        description = ''
+          Niri configuration.
 
-            A KDL document attrset that is serialised via the kdl library
-            and validated with `niri validate` at build time.
-          '';
-        };
+          A KDL document attrset that is serialised via the kdl library
+          and validated with `niri validate` at build time.
+        '';
       };
     };
   };
