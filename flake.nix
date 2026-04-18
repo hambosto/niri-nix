@@ -50,7 +50,7 @@
         }
       );
 
-      overlays.default = overlay;
+      overlays.niri = overlay;
       homeModules.niri = import ./modules/home.nix { inherit self kdl; };
       nixosModules.niri = import ./modules/nixos.nix { inherit self; };
 
