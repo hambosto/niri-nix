@@ -1,0 +1,15 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 400c210..75ef7fb 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -71,3 +71,10 @@ inherits = "dev"
+ # Shrink bloat in ./target which negatively affects build caching
+ incremental = false
+ debug = false
++
++[profile.release]
++opt-level = 3
++lto = "fat"
++codegen-units = 1
++panic = "abort"
++strip = true

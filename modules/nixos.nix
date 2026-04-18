@@ -30,7 +30,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ cfg.package ];
+    environment.systemPackages = [
+      cfg.package
+      pkgs.nautilus
+    ];
 
     services.displayManager.sessionPackages = [ cfg.package ];
     services.dbus.packages = [ pkgs.nautilus ];

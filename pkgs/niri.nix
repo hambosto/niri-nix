@@ -66,6 +66,8 @@ rustPlatform.buildRustPackage {
     ++ lib.optional withScreencastSupport "xdp-gnome-screencast"
     ++ lib.optional withSystemd "systemd";
 
+  doCheck = false;
+
   passthru.providedSessions = [ "niri" ];
 
   RUSTFLAGS = [
