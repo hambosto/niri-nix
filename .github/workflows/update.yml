@@ -37,6 +37,13 @@ jobs:
             dependencies
             automated
 
+      - name: Checkout PR branch
+        if: ${{ steps.update.outputs.pull-request-number != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr checkout ${{ steps.update.outputs.pull-request-number }}
+
       - name: Build and push niri-unstable to Cachix cache
         if: ${{ steps.update.outputs.pull-request-number != '' }}
         run: |
