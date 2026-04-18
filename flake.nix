@@ -22,7 +22,7 @@
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       systems,
@@ -50,7 +50,7 @@
         };
       };
 
-      homeModules.niri = import ./modules/home.nix;
+      homeModules.niri = import ./modules/home.nix { inherit inputs; };
       nixosModules.niri = import ./modules/nixos.nix;
 
       lib = {
