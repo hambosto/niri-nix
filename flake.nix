@@ -12,7 +12,7 @@
     xwayland-satellite-unstable.flake = false;
 
     niri-utils = {
-      url = "github:sodiboo/niri-flake";
+      url = "github:sodiboo/niri-flake/d96d43634b2207a6a0f836c693f299642737f4f0";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-stable.follows = "";
       inputs.niri-stable.follows = "";
