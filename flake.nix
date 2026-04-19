@@ -10,6 +10,16 @@
 
     xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
     xwayland-satellite-unstable.flake = false;
+
+    niri-utils = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-stable.follows = "";
+      inputs.niri-stable.follows = "";
+      inputs.niri-unstable.follows = "";
+      inputs.xwayland-satellite-stable.follows = "";
+      inputs.xwayland-satellite-unstable.follows = "";
+    };
   };
 
   outputs =
@@ -89,6 +99,8 @@
             "out"
             "doc"
           ];
+
+          passthru.providedSessions = [ "niri" ];
 
           postPatch = ''
             export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=/"
