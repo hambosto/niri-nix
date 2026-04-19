@@ -38,12 +38,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ steps.update.outputs.pull-request-number }}
 
-      - name: Build and push packages to Cachix
+      - name: Push niri-unstable to Cachix
         if: steps.update.outputs.pull-request-number != ''
-        run: |
-          for pkg in niri-unstable xwayland-satellite-unstable; do
-            nix build -L ".#$pkg" --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
-          done
+        run: nix build -L .#niri-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+
+      - name: Push xwayland-satellite-unstable to Cachix
+        if: steps.update.outputs.pull-request-number != ''
+        run: nix build -L .#xwayland-satellite-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Auto-merge PR
         if: steps.update.outputs.pull-request-number != ''
