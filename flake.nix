@@ -56,22 +56,22 @@
           cargoLock.allowBuiltinFetchGit = true;
 
           nativeBuildInputs = with pkgs; [
-            pkg-config
-            pkgs.rustPlatform.bindgenHook
             installShellFiles
+            pkg-config
+            rustPlatform.bindgenHook
           ];
 
           buildInputs = with pkgs; [
-            wayland
+            libdisplay-info
             libgbm
             libglvnd
-            seatd
             libinput
-            libdisplay-info_0_2
             libxkbcommon
             pango
             pipewire
+            seatd
             systemdLibs
+            wayland
           ];
 
           buildNoDefaultFeatures = true;
@@ -90,49 +90,36 @@
             "-C link-arg=-lEGL"
             "-C link-arg=-lwayland-client"
             "-C link-arg=-Wl,--pop-state"
-            "-C debuginfo=line-tables-only"
           ];
 
           NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
-          outputs = [
-            "out"
-            "doc"
-          ];
-
           passthru.providedSessions = [ "niri" ];
 
           postPatch = ''
-            export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=/"
-            export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP/source=./"
             patchShebangs resources/niri-session
+            substituteInPlace resources/niri.service \
+              --replace-fail "/usr/bin" "$out/bin"
           '';
 
           postInstall = ''
             install -Dm0755 resources/niri-session -t $out/bin
             install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
             install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
-            install -Dm0644 resources/niri{-shutdown.target,.service} -t $out/lib/systemd/user
+            install -Dm0644 resources/niri.service -t $out/lib/systemd/user
+            install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
 
             installShellCompletion --cmd niri \
               --bash <($out/bin/niri completions bash) \
               --zsh <($out/bin/niri completions zsh) \
               --fish <($out/bin/niri completions fish) \
               --nushell <($out/bin/niri completions nushell)
-
-              install -Dm0644 README.md resources/default-config.kdl -t $doc/share/doc/niri
-          '';
-
-          postFixup = ''
-            substituteInPlace $out/lib/systemd/user/niri.service \
-              --replace-fail "ExecStart=niri" "ExecStart=$out/bin/niri"
           '';
 
           meta = {
             description = "Scrollable-tiling Wayland compositor";
             homepage = "https://github.com/YaLTeR/niri";
             license = lib.licenses.gpl3Only;
-            maintainers = with lib.maintainers; [ hambosto ];
             mainProgram = "niri";
             platforms = lib.platforms.linux;
           };
@@ -150,12 +137,15 @@
           cargoLock.allowBuiltinFetchGit = true;
 
           nativeBuildInputs = with pkgs; [
+            makeBinaryWrapper
             pkg-config
-            pkgs.rustPlatform.bindgenHook
-            makeWrapper
+            rustPlatform.bindgenHook
           ];
 
-          buildInputs = with pkgs; [ xcb-util-cursor ];
+          buildInputs = with pkgs; [
+            libxcb
+            xcb-util-cursor
+          ];
 
           buildNoDefaultFeatures = true;
           buildFeatures = [ "systemd" ];
@@ -181,7 +171,6 @@
             description = "Rootless Xwayland integration to any Wayland compositor implementing xdg_wm_base";
             homepage = "https://github.com/Supreeeme/xwayland-satellite";
             license = lib.licenses.mpl20;
-            maintainers = with lib.maintainers; [ hambosto ];
             mainProgram = "xwayland-satellite";
             platforms = lib.platforms.linux;
           };
