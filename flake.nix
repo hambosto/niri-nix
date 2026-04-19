@@ -71,27 +71,28 @@
             "systemd"
           ];
 
-          doCheck = false;
+          checkFlags = [ "--skip=::egl" ];
 
           patches = [ ./001-niri-release.patch ];
 
-          # RUSTFLAGS = [
-          #   "-C link-arg=-Wl,--push-state,--no-as-needed"
-          #   "-C link-arg=-lEGL"
-          #   "-C link-arg=-lwayland-client"
-          #   "-C link-arg=-Wl,--pop-state"
-          # ];
+          RUSTFLAGS = [
+            "-C link-arg=-Wl,--push-state,--no-as-needed"
+            "-C link-arg=-lEGL"
+            "-C link-arg=-lwayland-client"
+            "-C link-arg=-Wl,--pop-state"
+            "-C debuginfo=line-tables-only"
+          ];
 
           NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
-          # outputs = [
-          #   "out"
-          #   "doc"
-          # ];
+          outputs = [
+            "out"
+            "doc"
+          ];
 
           postPatch = ''
-            # export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=/"
-            # export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP/source=./"
+            export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=/"
+            export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP/source=./"
             patchShebangs resources/niri-session
           '';
 
@@ -99,14 +100,15 @@
             install -Dm0755 resources/niri-session -t $out/bin
             install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
             install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
-            install -Dm0644 resources/niri.service -t $out/lib/systemd/user
-            install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
+            install -Dm0644 resources/niri{-shutdown.target,.service} -t $out/lib/systemd/user
 
             installShellCompletion --cmd niri \
               --bash <($out/bin/niri completions bash) \
               --zsh <($out/bin/niri completions zsh) \
               --fish <($out/bin/niri completions fish) \
               --nushell <($out/bin/niri completions nushell)
+
+              install -Dm0644 README.md resources/default-config.kdl -t $doc/share/doc/niri
           '';
 
           postFixup = ''
@@ -247,20 +249,37 @@
             };
           };
 
-          config = lib.mkIf cfg.enable {
-            xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
-              source =
-                pkgs.runCommand "config.kdl"
-                  {
-                    config = serialize.nodes cfg.settings;
-                    passAsFile = [ "config" ];
-                    buildInputs = [ cfg.package ];
-                  }
-                  ''
-                    niri validate -c $configPath
-                    cp $configPath $out
-                  '';
-            };
+          # config = lib.mkIf cfg.enable {
+          #   xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
+          #     source =
+          #       pkgs.runCommand "config.kdl"
+          #         {
+          #           config = serialize.nodes cfg.settings;
+          #           passAsFile = [ "config" ];
+          #           buildInputs = [ cfg.package ];
+          #         }
+          #         ''
+          #           niri validate -c $configPath
+          #           cp $configPath $out
+          #         '';
+          #   };
+          # };
+
+          config.xdg.configFile.config = {
+            enable = cfg.enable;
+            target = "niri/config.kdl";
+            # source = validated-config-for pkgs cfg.package cfg.finalConfig;
+            source =
+              pkgs.runCommand "config.kdl"
+                {
+                  config = serialize.nodes cfg.settings;
+                  passAsFile = [ "config" ];
+                  buildInputs = [ cfg.package ];
+                }
+                ''
+                  niri validate -c $configPath
+                  cp $configPath $out
+                '';
           };
         };
     in
