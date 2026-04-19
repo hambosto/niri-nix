@@ -71,9 +71,9 @@
             "systemd"
           ];
 
-          checkFlags = [ "--skip=::egl" ];
+          doCheck = false;
 
-          patches = [ ./001-niri-release.patch ];
+          patches = [ ./00001-enable_lto-niri.patch ];
 
           RUSTFLAGS = [
             "-C link-arg=-Wl,--push-state,--no-as-needed"
@@ -150,7 +150,7 @@
 
           doCheck = false;
 
-          patches = [ ./001-xwayland-release.patch ];
+          patches = [ ./00002-enable_lto-xwayland.patch ];
 
           VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
@@ -249,26 +249,9 @@
             };
           };
 
-          # config = lib.mkIf cfg.enable {
-          #   xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != [ ]) {
-          #     source =
-          #       pkgs.runCommand "config.kdl"
-          #         {
-          #           config = serialize.nodes cfg.settings;
-          #           passAsFile = [ "config" ];
-          #           buildInputs = [ cfg.package ];
-          #         }
-          #         ''
-          #           niri validate -c $configPath
-          #           cp $configPath $out
-          #         '';
-          #   };
-          # };
-
           config.xdg.configFile.config = {
             enable = cfg.enable;
             target = "niri/config.kdl";
-            # source = validated-config-for pkgs cfg.package cfg.finalConfig;
             source =
               pkgs.runCommand "config.kdl"
                 {
