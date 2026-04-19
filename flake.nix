@@ -33,7 +33,7 @@
       inherit (nixpkgs) lib;
       forAllSystems = f: nixpkgs.lib.genAttrs (import systems) f;
       pkgsFor = system: nixpkgs.legacyPackages.${system};
-      kdl = import ./kdl.nix { inherit lib; };
+      kdl = inputs.niri-utils.lib.kdl;
 
       fmtDate =
         raw:
@@ -252,7 +252,7 @@
             };
 
             settings = lib.mkOption {
-              type = types.kdlDocument;
+              type = types.kdl-document;
               default = [ ];
               description = ''
                 Niri configuration as a KDL document attrset, serialised via
@@ -261,9 +261,7 @@
             };
           };
 
-          config.xdg.configFile.config = {
-            enable = cfg.enable;
-            target = "niri/config.kdl";
+          config.xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.enable && cfg.settings != null) {
             source =
               pkgs.runCommand "config.kdl"
                 {
