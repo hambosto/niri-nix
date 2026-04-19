@@ -31,9 +31,9 @@
     }:
     let
       inherit (nixpkgs) lib;
+      inherit (inputs.niri-utils.lib) kdl;
       forAllSystems = f: nixpkgs.lib.genAttrs (import systems) f;
       pkgsFor = system: nixpkgs.legacyPackages.${system};
-      kdl = inputs.niri-utils.lib.kdl;
 
       fmtDate =
         raw:
