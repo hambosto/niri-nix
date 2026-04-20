@@ -83,7 +83,10 @@
 
           doCheck = false;
 
-          patches = [ ./00001-enable_lto-niri.patch ];
+          patches = [
+            ./00001-niri-profile.patch
+            ./00002-niri-environment.patch
+          ];
 
           RUSTFLAGS = [
             "-C link-arg=-Wl,--push-state,--no-as-needed"
@@ -152,7 +155,7 @@
 
           doCheck = false;
 
-          patches = [ ./00002-enable_lto-xwayland.patch ];
+          patches = [ ./00001-xwayland-profile.patch ];
 
           VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 

@@ -1,9 +1,9 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index b1cf246..3cf45cc 100644
+index 6a46154..0e738f7 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -152,9 +152,11 @@ dinit = []
- new_without_default = "allow"
+@@ -153,9 +153,11 @@ new_without_default = "allow"
+ collapsible_match = "allow"
  
  [profile.release]
 -debug = "line-tables-only"
