@@ -274,13 +274,13 @@
         xwayland-satellite-unstable = mkXwaylandSatellite (pkgsFor system) inputs.xwayland-satellite-unstable;
       });
 
-      overlays.niri = final: _prev: {
+      overlays.default = final: _prev: {
         niri-unstable = mkNiri final inputs.niri-unstable;
         xwayland-satellite-unstable = mkXwaylandSatellite final inputs.xwayland-satellite-unstable;
       };
 
-      homeModules.niri = homeModule;
-      nixosModules.niri = nixosModule;
+      homeModules.default = homeModule;
+      nixosModules.default = nixosModule;
 
       lib = { inherit kdl; };
     };
