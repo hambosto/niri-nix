@@ -100,24 +100,76 @@
           passthru.providedSessions = [ "niri" ];
 
           postPatch = ''
-            patchShebangs resources/niri-session
-            substituteInPlace resources/niri.service \
-              --replace-fail "ExecStart=niri" "ExecStart=$out/bin/niri"
+            # patchShebangs resources/niri-session
+            # substituteInPlace resources/niri.service \
+            #  --replace-fail "ExecStart=niri" "ExecStart=$out/bin/niri"
           '';
 
-          postInstall = ''
-            install -Dm0755 resources/niri-session -t $out/bin
-            install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
-            install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
-            install -Dm0644 resources/niri.service -t $out/lib/systemd/user
-            install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
+          postInstall =
+            let
 
-            installShellCompletion --cmd niri \
-              --bash <($out/bin/niri completions bash) \
-              --zsh <($out/bin/niri completions zsh) \
-              --fish <($out/bin/niri completions fish) \
-              --nushell <($out/bin/niri completions nushell)
-          '';
+              niriSession = pkgs.writeShellScriptBin "niri-session" ''
+                # Detect if being run as a user service, which implies external session management,
+                # exec compositor directly
+                if [ -n "''${MANAGERPID:-}" ] && [ "''${SYSTEMD_EXEC_PID:-}" = "$$" ]; then
+                  case "$(ps -p "$MANAGERPID" -o cmd=)" in
+                  *systemd*--user*)
+                    exec niri --session
+                    ;;
+                  esac
+                fi
+
+                if [ -n "$SHELL" ] &&
+                   grep -q "$SHELL" /etc/shells &&
+                   ! (echo "$SHELL" | grep -q "false") &&
+                   ! (echo "$SHELL" | grep -q "nologin"); then
+                  if [ "$1" != '-l' ]; then
+                    exec bash -c "exec -l '$SHELL' -c '$0 -l $*'"
+                  else
+                    shift
+                  fi
+                fi
+
+                # Make sure there's no already running session.
+                if ${lib.getExe' pkgs.systemd "systemctl"} --user -q is-active niri.service; then
+                  echo 'A niri session is already running.'
+                  exit 1
+                fi
+
+                # Reset failed state of all user units.
+                ${lib.getExe' pkgs.systemd "systemctl"} --user reset-failed
+
+                # Import the login manager environment.
+                ${lib.getExe' pkgs.systemd "systemctl"} --user import-environment
+
+                if hash ${lib.getExe' pkgs.dbus "dbus-update-activation-environment"} 2>/dev/null; then
+                  ${lib.getExe' pkgs.dbus "dbus-update-activation-environment"} --all
+                fi
+
+                # Start niri and wait for it to terminate.
+                ${lib.getExe' pkgs.systemd "systemctl"} --user --wait start niri.service
+
+                # Force stop of graphical-session.target.
+                ${lib.getExe' pkgs.systemd "systemctl"} --user start --job-mode=replace-irreversibly niri-shutdown.target
+
+                # Unset environment that we've set.
+                ${lib.getExe' pkgs.systemd "systemctl"} --user unset-environment WAYLAND_DISPLAY DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP NIRI_SOCKET
+              '';
+            in
+            ''
+              install -Dm0755 ${niriSession}/bin/niri-session $out/bin/niri-session
+              # install -Dm0755 resources/niri-session -t $out/bin
+              install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
+              # install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
+              # install -Dm0644 resources/niri.service -t $out/lib/systemd/user
+              # install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
+
+              installShellCompletion --cmd niri \
+                --bash <($out/bin/niri completions bash) \
+                --zsh <($out/bin/niri completions zsh) \
+                --fish <($out/bin/niri completions fish) \
+                --nushell <($out/bin/niri completions nushell)
+            '';
 
           meta = {
             description = "Scrollable-tiling Wayland compositor";
@@ -218,6 +270,43 @@
                 !cfg.package.cargoBuildNoDefaultFeatures
                 || builtins.elem "xdp-gnome-screencast" cfg.package.cargoBuildFeatures
               ) [ pkgs.xdg-desktop-portal-gnome ];
+            };
+          };
+
+          systemd.user.services.niri = {
+            Unit = {
+              Description = "A scrollable-tiling Wayland compositor";
+              BindsTo = [ "graphical-session.target" ];
+              Before = [ "graphical-session.target" ];
+              Wants = [
+                "graphical-session-pre.target"
+                "xdg-desktop-autostart.target"
+              ];
+              After = [ "graphical-session-pre.target" ];
+            };
+            Service = {
+              Slice = "session.slice";
+              Type = "notify";
+              ExecStart = "${lib.getExe cfg.package} --session";
+            };
+            Install = {
+              WantedBy = [ "graphical-session.target" ];
+            };
+          };
+
+          systemd.user.services.niri-shutdown = {
+            Unit = {
+              Description = "Shutdown running niri session";
+              DefaultDependencies = false;
+              StopWhenUnneeded = true;
+              Conflicts = [
+                "graphical-session.target"
+                "graphical-session-pre.target"
+              ];
+              After = [
+                "graphical-session.target"
+                "graphical-session-pre.target"
+              ];
             };
           };
         };
