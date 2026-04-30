@@ -1,0 +1,54 @@
+name: Update Flake Packages
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-flake-packages:
+    name: Update Flake Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Set up Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: ${{ secrets.CACHIX_CACHE_NAME }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Run nix-update for niri-unstable and xwayland-satellite-unstable
+        id: update
+        uses: selfuryon/nix-update-action@v1
+        with:
+          packages: "niri-unstable,xwayland-satellite-unstable"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout nix-update PR branch
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ steps.update.outputs.pull-request-number }}
+
+      - name: Push niri-unstable to Cachix
+        if: steps.update.outputs.pull-request-number != ''
+        run: nix build -L .#niri-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+
+      - name: Push xwayland-satellite-unstable to Cachix
+        if: steps.update.outputs.pull-request-number != ''
+        run: nix build -L .#xwayland-satellite-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+
+      - name: Auto-merge nix-update PR
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --squash --delete-branch
