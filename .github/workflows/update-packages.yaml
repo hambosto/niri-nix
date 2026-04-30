@@ -32,50 +32,26 @@ jobs:
       - name: Run nix-update for xwayland-satellite-unstable
         run: nix run nixpkgs#nix-update -- --flake --version=branch packages.x86_64-linux.xwayland-satellite-unstable
 
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Commit and push
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b nix-update/bump-packages
-          git add -A
-          git commit -m "nix-update: bump unstable packages"
-          git push origin nix-update/bump-packages --force
-
-      - name: Open PR
-        if: steps.changes.outputs.changed == 'true'
+      - name: Create pull request
         id: pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_URL=$(gh pr create \
-            --title "nix-update: bump unstable packages" \
-            --body "Automated bump of unstable packages via \`nix-update\`." \
-            --base main \
-            --head nix-update/bump-packages \
-            2>&1 || gh pr view nix-update/bump-packages --json url -q .url)
-          PR_NUMBER=$(echo "$PR_URL" | grep -oP '(?<=/pull/)\d+')
-          echo "pull-request-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: nix-update/bump-packages
+          commit-message: "nix-update: bump unstable packages"
+          title: "nix-update: bump unstable packages"
+          body: "Automated bump of unstable packages via `nix-update`."
 
       - name: Push niri-unstable to Cachix
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.pr.outputs.pull-request-number != ''
         run: nix build -L .#niri-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Push xwayland-satellite-unstable to Cachix
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.pr.outputs.pull-request-number != ''
         run: nix build -L .#xwayland-satellite-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Auto-merge nix-update PR
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge ${{ steps.pr.outputs.pull-request-number }} --squash --delete-branch
