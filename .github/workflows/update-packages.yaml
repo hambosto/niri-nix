@@ -28,7 +28,7 @@ jobs:
 
       - name: Run nix-update for niri-unstable and xwayland-satellite-unstable
         id: update
-        uses: selfuryon/nix-update-action@v1
+        uses: selfuryon/nix-update-action@v1.1.0
         with:
           packages: "niri-unstable,xwayland-satellite-unstable"
           token: ${{ secrets.GITHUB_TOKEN }}
