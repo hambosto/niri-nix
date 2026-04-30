@@ -36,11 +36,11 @@
           src = pkgs.fetchFromGitHub {
             owner = "niri-wm";
             repo = "niri";
-            rev = "719255ac358304b96ac951ee1bfce1f0299202bd";
-            hash = "sha256-1uyLRlGAFAecxyevBQ9/LZQjD6cwdcqECJBIWVIhlXE=";
+            rev = "dd1c3bcb9f1ef416df33ffa22d1d9bcee1398e7d";
+            hash = "sha256-lBZc1UMy+1P1T/E41j3jQrpS7EFI3qegd+ktHZdamIg=";
           };
 
-          cargoHash = "sha256-JLInwRj8WqpgaVQDFg+2MT6+7hdqJHhWOSd/3WKsmSM=";
+          cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
 
           nativeBuildInputs = with pkgs; [
             installShellFiles
@@ -124,11 +124,11 @@
           src = pkgs.fetchFromGitHub {
             owner = "Supreeeme";
             repo = "xwayland-satellite";
-            rev = "bc47ef59501556fc2584155ddef76493752dd727";
-            hash = "sha256-V8+DrPOp940J6icERAaGuDQTKyEyZzFuRw363XwDKXg=";
+            rev = "a879e5e0896a326adc79c474bf457b8b99011027";
+            hash = "sha256-wToKwH7IgWdGLMSIWksEDs4eumR6UbbsuPQ42r0oTXQ=";
           };
 
-          cargoHash = "sha256-3rvOrgABu+GapZb48OafObJbF8NjJoLw3YzRu+LHhNE=";
+          cargoHash = "sha256-jbEihJYcOwFeDiMYlOtaS8GlunvSze80iWahDj1qDrs=";
 
           nativeBuildInputs = with pkgs; [
             makeBinaryWrapper
