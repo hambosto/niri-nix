@@ -31,7 +31,7 @@
         pkgs:
         pkgs.rustPlatform.buildRustPackage {
           pname = "niri";
-          version = "unstable-${fmtDate self.lastModifiedDate}-${self.shortRev}";
+          version = "unstable-${fmtDate self.lastModifiedDate}-${self.shortRev or "dirty"}";
 
           src = pkgs.fetchFromGitHub {
             owner = "niri-wm";
