@@ -43,6 +43,7 @@
           cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
 
           nativeBuildInputs = with pkgs; [
+            autoPatchelfHook
             installShellFiles
             pkg-config
             rustPlatform.bindgenHook
