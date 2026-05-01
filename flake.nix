@@ -43,6 +43,7 @@
           cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
 
           nativeBuildInputs = with pkgs; [
+            autoPatchelfHook
             installShellFiles
             pkg-config
             rustPlatform.bindgenHook
@@ -75,29 +76,18 @@
             ./00002-niri-environment.patch
           ];
 
-          RUSTFLAGS = [
-            "-C link-arg=-Wl,--push-state,--no-as-needed"
-            "-C link-arg=-lEGL"
-            "-C link-arg=-lwayland-client"
-            "-C link-arg=-Wl,--pop-state"
-          ];
-
           NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate self.lastModifiedDate} (commit ${src.rev})";
 
           passthru.providedSessions = [ "niri" ];
 
           postPatch = ''
             patchShebangs resources/niri-session
-            substituteInPlace resources/niri.service \
-              --replace-fail "ExecStart=niri" "ExecStart=$out/bin/niri"
           '';
 
           postInstall = ''
             install -Dm0755 resources/niri-session -t $out/bin
             install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
             install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
-            install -Dm0644 resources/niri.service -t $out/lib/systemd/user
-            install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
 
             installShellCompletion --cmd niri \
               --bash <($out/bin/niri completions bash) \
@@ -244,18 +234,54 @@
             };
           };
 
-          config.xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.enable && cfg.settings != null) {
-            source =
-              pkgs.runCommand "config.kdl"
-                {
-                  config = serialize.nodes cfg.settings;
-                  passAsFile = [ "config" ];
-                  buildInputs = [ cfg.package ];
-                }
-                ''
-                  niri validate -c $configPath
-                  cp $configPath $out
+          config = lib.mkIf cfg.enable {
+            xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != null) {
+              source =
+                let
+                  configFile = pkgs.writeText "config.kdl" (serialize.nodes cfg.settings);
+                in
+                pkgs.runCommand "config.kdl" ''
+                  ${lib.getExe cfg.package} validate -c ${configFile}
+                  cp ${configFile} $out
                 '';
+            };
+
+            systemd.user.services.niri = {
+              Unit = {
+                Description = "A scrollable-tiling Wayland compositor";
+                BindsTo = [ "graphical-session.target" ];
+                Before = [ "graphical-session.target" ];
+                Wants = [
+                  "graphical-session-pre.target"
+                  "xdg-desktop-autostart.target"
+                ];
+                After = [ "graphical-session-pre.target" ];
+              };
+              Service = {
+                Slice = "session.slice";
+                Type = "notify";
+                ExecStart = "${lib.getExe cfg.package} --session";
+              };
+              Install = {
+                WantedBy = [ "graphical-session.target" ];
+              };
+            };
+
+            systemd.user.services.niri-shutdown = {
+              Unit = {
+                Description = "Shutdown running niri session";
+                DefaultDependencies = false;
+                StopWhenUnneeded = true;
+                Conflicts = [
+                  "graphical-session.target"
+                  "graphical-session-pre.target"
+                ];
+                After = [
+                  "graphical-session.target"
+                  "graphical-session-pre.target"
+                ];
+              };
+            };
           };
         };
     in
