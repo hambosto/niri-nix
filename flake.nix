@@ -240,7 +240,7 @@
                 let
                   configFile = pkgs.writeText "config.kdl" (serialize.nodes cfg.settings);
                 in
-                pkgs.runCommand "config.kdl" ''
+                pkgs.runCommand "config.kdl" { } ''
                   ${lib.getExe cfg.package} validate -c ${configFile}
                   cp ${configFile} $out
                 '';
