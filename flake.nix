@@ -85,21 +85,36 @@
 
           passthru.providedSessions = [ "niri" ];
 
-          postPatch = ''
-            patchShebangs resources/niri-session
-          '';
+          postInstall =
+            let
+              niriSession = pkgs.writeShellScript "niri-session" ''
+                if ${lib.getExe' pkgs.systemd "systemctl"} --user -q is-active niri.service; then
+                  echo 'A niri session is already running.'
+                  exit 1
+                fi
 
-          postInstall = ''
-            install -Dm0755 resources/niri-session -t $out/bin
-            install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
-            install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
+                ${lib.getExe' pkgs.systemd "systemctl"} --user reset-failed
+                ${lib.getExe' pkgs.systemd "systemctl"} --user --user show-environment | grep -v '^_=' | cut -d= -f1 | xargs ${lib.getExe' pkgs.systemd "systemctl"} --user import-environment
 
-            installShellCompletion --cmd niri \
-              --bash <($out/bin/niri completions bash) \
-              --zsh <($out/bin/niri completions zsh) \
-              --fish <($out/bin/niri completions fish) \
-              --nushell <($out/bin/niri completions nushell)
-          '';
+                if hash ${lib.getExe' pkgs.dbus "dbus-update-activation-environment"} 2>/dev/null; then
+                  ${lib.getExe' pkgs.dbus "dbus-update-activation-environment"} --all
+                fi
+
+                ${lib.getExe' pkgs.systemd "systemctl"} --user --wait start niri.service
+                ${lib.getExe' pkgs.systemd "systemctl"} --user unset-environment WAYLAND_DISPLAY DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP NIRI_SOCKET
+              '';
+            in
+            ''
+              install -Dm0755 ${niriSession} $out/bin/niri-session
+              install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
+              install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
+
+              installShellCompletion --cmd niri \
+                --bash <($out/bin/niri completions bash) \
+                --zsh <($out/bin/niri completions zsh) \
+                --fish <($out/bin/niri completions fish) \
+                --nushell <($out/bin/niri completions nushell)
+            '';
 
           meta = {
             description = "Scrollable-tiling Wayland compositor";
@@ -269,22 +284,6 @@
               };
               Install = {
                 WantedBy = [ "graphical-session.target" ];
-              };
-            };
-
-            systemd.user.services.niri-shutdown = {
-              Unit = {
-                Description = "Shutdown running niri session";
-                DefaultDependencies = false;
-                StopWhenUnneeded = true;
-                Conflicts = [
-                  "graphical-session.target"
-                  "graphical-session-pre.target"
-                ];
-                After = [
-                  "graphical-session.target"
-                  "graphical-session-pre.target"
-                ];
               };
             };
           };
