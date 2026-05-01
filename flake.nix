@@ -82,12 +82,16 @@
 
           postPatch = ''
             patchShebangs resources/niri-session
+            substituteInPlace resources/niri.service \
+              --replace-fail "ExecStart=niri" "ExecStart=$out/bin/niri"
           '';
 
           postInstall = ''
             install -Dm0755 resources/niri-session -t $out/bin
             install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
             install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
+            install -Dm0644 resources/niri.service -t $out/lib/systemd/user
+            install -Dm0644 resources/niri-shutdown.target -t $out/lib/systemd/user
 
             installShellCompletion --cmd niri \
               --bash <($out/bin/niri completions bash) \
@@ -244,43 +248,6 @@
                   ${lib.getExe cfg.package} validate -c ${configFile}
                   cp ${configFile} $out
                 '';
-            };
-
-            systemd.user.services.niri = {
-              Unit = {
-                Description = "A scrollable-tiling Wayland compositor";
-                BindsTo = [ "graphical-session.target" ];
-                Before = [ "graphical-session.target" ];
-                Wants = [
-                  "graphical-session-pre.target"
-                  "xdg-desktop-autostart.target"
-                ];
-                After = [ "graphical-session-pre.target" ];
-              };
-              Service = {
-                Slice = "session.slice";
-                Type = "notify";
-                ExecStart = "${lib.getExe cfg.package} --session";
-              };
-              Install = {
-                WantedBy = [ "graphical-session.target" ];
-              };
-            };
-
-            systemd.user.services.niri-shutdown = {
-              Unit = {
-                Description = "Shutdown running niri session";
-                DefaultDependencies = false;
-                StopWhenUnneeded = true;
-                Conflicts = [
-                  "graphical-session.target"
-                  "graphical-session-pre.target"
-                ];
-                After = [
-                  "graphical-session.target"
-                  "graphical-session-pre.target"
-                ];
-              };
             };
           };
         };
