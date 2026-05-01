@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 6a46154..0e738f7 100644
+index fa7164e..b74f74c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -153,9 +153,11 @@ new_without_default = "allow"
+@@ -152,9 +152,11 @@ new_without_default = "allow"
  collapsible_match = "allow"
  
  [profile.release]

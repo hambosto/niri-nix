@@ -61,6 +61,11 @@
             wayland
           ];
 
+          runtimeDependencies = with pkgs; [
+            libglvnd
+            wayland
+          ];
+
           buildNoDefaultFeatures = true;
           buildFeatures = [
             "dbus"
@@ -70,17 +75,7 @@
 
           doCheck = false;
 
-          patches = [
-            ./00001-niri-profile.patch
-            ./00002-niri-environment.patch
-          ];
-
-          RUSTFLAGS = [
-            "-C link-arg=-Wl,--push-state,--no-as-needed"
-            "-C link-arg=-lEGL"
-            "-C link-arg=-lwayland-client"
-            "-C link-arg=-Wl,--pop-state"
-          ];
+          patches = [ ./patches/niri-profile.patch ];
 
           NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate self.lastModifiedDate} (commit ${src.rev})";
 
@@ -146,7 +141,7 @@
 
           doCheck = false;
 
-          patches = [ ./00001-xwayland-profile.patch ];
+          patches = [ ./patches/xwayland-profile.patch ];
 
           VERGEN_GIT_DESCRIBE = "unstable ${fmtDate self.lastModifiedDate} (commit ${src.rev})";
 
@@ -244,18 +239,17 @@
             };
           };
 
-          config.xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.enable && cfg.settings != null) {
-            source =
-              pkgs.runCommand "config.kdl"
-                {
-                  config = serialize.nodes cfg.settings;
-                  passAsFile = [ "config" ];
-                  buildInputs = [ cfg.package ];
-                }
-                ''
-                  niri validate -c $configPath
-                  cp $configPath $out
+          config = lib.mkIf cfg.enable {
+            xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != null) {
+              source =
+                let
+                  configFile = pkgs.writeText "config.kdl" (serialize.nodes cfg.settings);
+                in
+                pkgs.runCommand "config.kdl" { } ''
+                  ${lib.getExe cfg.package} validate -c ${configFile}
+                  cp ${configFile} $out
                 '';
+            };
           };
         };
     in

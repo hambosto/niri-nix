@@ -38,9 +38,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: nix-update/bump-packages
-          commit-message: "nix-update: bump unstable packages"
-          title: "nix-update: bump unstable packages"
-          body: "Automated bump of unstable packages via `nix-update`."
+          commit-message: "chore: bump unstable packages to latest upstream"
+          title: "chore: bump unstable packages to latest upstream"
+          body: |
+            Automated hourly maintenance bump of unstable packages.
+
+            All updated packages have been built and pushed to Cachix prior to merging.
+            This PR was created automatically and will be auto-merged once ready.
 
       - name: Checkout PR branch
         if: steps.pr.outputs.pull-request-number != ''
