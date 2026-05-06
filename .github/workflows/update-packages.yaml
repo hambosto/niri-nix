@@ -54,11 +54,11 @@ jobs:
 
       - name: Push niri-unstable to Cachix
         if: steps.pr.outputs.pull-request-number != ''
-        run: nix build -L .#niri-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+        run: nix build --no-link --print-out-paths .#niri-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Push xwayland-satellite-unstable to Cachix
         if: steps.pr.outputs.pull-request-number != ''
-        run: nix build -L .#xwayland-satellite-unstable --print-out-paths | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+        run: nix build --no-link --print-out-paths .#xwayland-satellite-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Auto-merge nix-update PR
         if: steps.pr.outputs.pull-request-number != ''
