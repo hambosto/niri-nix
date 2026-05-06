@@ -39,11 +39,11 @@ jobs:
         run: gh pr checkout ${{ steps.update.outputs.pull-request-number }}
 
       - name: Push niri-unstable to Cachix
-        if: steps.pr.outputs.pull-request-number != ''
+        if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#niri-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
         
       - name: Push xwayland-satellite-unstable to Cachix
-        if: steps.pr.outputs.pull-request-number != ''
+        if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#xwayland-satellite-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
         
       - name: Auto-merge flake.lock PR
