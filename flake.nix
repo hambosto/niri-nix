@@ -36,8 +36,8 @@
           src = pkgs.fetchFromGitHub {
             owner = "niri-wm";
             repo = "niri";
-            rev = "38191826cb1e5fb9051a7e141fefe4941a2b4bed";
-            hash = "sha256-9NyDMVf8ydUZGTzcPcLMQf0o1B3bte/00UGbuXHNWh8=";
+            rev = "cd5ac3e5e04bb5a11276d3c755fa25242818e05f";
+            hash = "sha256-9VvAHNoi2wd0fxLfJOPChZMS7l6rhCtAJmpd59Hv5rw=";
           };
 
           cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
