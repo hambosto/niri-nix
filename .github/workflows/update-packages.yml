@@ -1,5 +1,4 @@
-name: Update Flake Inputs
-
+name: Update Packages
 on:
   schedule:
     - cron: "0 * * * *"
@@ -11,7 +10,7 @@ permissions:
 
 jobs:
   update-flake-inputs:
-    name: Update Flake Inputs
+    name: Update Packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,24 +29,24 @@ jobs:
         id: update
         uses: DeterminateSystems/update-flake-lock@main
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Checkout flake.lock PR branch
         if: steps.update.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: gh pr checkout ${{ steps.update.outputs.pull-request-number }}
 
       - name: Push niri-unstable to Cachix
         if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#niri-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
-        
+
       - name: Push xwayland-satellite-unstable to Cachix
         if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#xwayland-satellite-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
-        
+
       - name: Auto-merge flake.lock PR
         if: steps.update.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --squash --delete-branch

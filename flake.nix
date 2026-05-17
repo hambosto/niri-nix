@@ -4,10 +4,15 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
+
+    niri-unstable.url = "github:niri-wm/niri";
+    niri-unstable.flake = false;
+    xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
+    xwayland-satellite-unstable.flake = false;
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       systems,
@@ -28,19 +33,15 @@
         "${year}-${month}-${day}";
 
       mkNiri =
-        pkgs:
-        pkgs.rustPlatform.buildRustPackage rec {
+        pkgs: src:
+        pkgs.rustPlatform.buildRustPackage {
           pname = "niri";
-          version = "unstable-${fmtDate self.lastModifiedDate}-${builtins.substring 0 7 (src.rev)}";
+          version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
 
-          src = pkgs.fetchFromGitHub {
-            owner = "niri-wm";
-            repo = "niri";
-            rev = "cd5ac3e5e04bb5a11276d3c755fa25242818e05f";
-            hash = "sha256-9VvAHNoi2wd0fxLfJOPChZMS7l6rhCtAJmpd59Hv5rw=";
-          };
+          inherit src;
 
-          cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
+          cargoLock.lockFile = "${src}/Cargo.lock";
+          cargoLock.allowBuiltinFetchGit = true;
 
           nativeBuildInputs = with pkgs; [
             autoPatchelfHook
@@ -78,7 +79,7 @@
 
           patches = [ ./patches/niri-profile.patch ];
 
-          NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate self.lastModifiedDate} (commit ${src.rev})";
+          NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
           passthru.providedSessions = [ "niri" ];
 
@@ -112,19 +113,15 @@
         };
 
       mkXwaylandSatellite =
-        pkgs:
-        pkgs.rustPlatform.buildRustPackage rec {
+        pkgs: src:
+        pkgs.rustPlatform.buildRustPackage {
           pname = "xwayland-satellite";
-          version = "unstable-${fmtDate self.lastModifiedDate}-${builtins.substring 0 7 (src.rev)}";
+          version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
 
-          src = pkgs.fetchFromGitHub {
-            owner = "Supreeeme";
-            repo = "xwayland-satellite";
-            rev = "a879e5e0896a326adc79c474bf457b8b99011027";
-            hash = "sha256-wToKwH7IgWdGLMSIWksEDs4eumR6UbbsuPQ42r0oTXQ=";
-          };
+          inherit src;
 
-          cargoHash = "sha256-jbEihJYcOwFeDiMYlOtaS8GlunvSze80iWahDj1qDrs=";
+          cargoLock.lockFile = "${src}/Cargo.lock";
+          cargoLock.allowBuiltinFetchGit = true;
 
           nativeBuildInputs = with pkgs; [
             makeBinaryWrapper
@@ -144,7 +141,7 @@
 
           patches = [ ./patches/xwayland-profile.patch ];
 
-          VERGEN_GIT_DESCRIBE = "unstable ${fmtDate self.lastModifiedDate} (commit ${src.rev})";
+          VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
           postInstall = ''
             wrapProgram $out/bin/xwayland-satellite \
@@ -256,13 +253,13 @@
     in
     {
       packages = forAllSystems (system: {
-        niri-unstable = mkNiri (pkgsFor system);
-        xwayland-satellite-unstable = mkXwaylandSatellite (pkgsFor system);
+        niri-unstable = mkNiri (pkgsFor system) inputs.niri-unstable;
+        xwayland-satellite-unstable = mkXwaylandSatellite (pkgsFor system) inputs.xwayland-satellite-unstable;
       });
 
       overlays.default = final: _prev: {
-        niri-unstable = mkNiri final;
-        xwayland-satellite-unstable = mkXwaylandSatellite final;
+        niri-unstable = mkNiri final inputs.niri-unstable;
+        xwayland-satellite-unstable = mkXwaylandSatellite final inputs.xwayland-satellite-unstable;
       };
 
       homeModules.default = homeModule;
