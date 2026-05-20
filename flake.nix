@@ -262,7 +262,7 @@
         xwayland-satellite-unstable = mkXwaylandSatellite final inputs.xwayland-satellite-unstable;
       };
 
-      homeModules.default = homeModule;
+      homeManagerModules.default = homeModule;
       nixosModules.default = nixosModule;
 
       lib = { inherit kdl; };
