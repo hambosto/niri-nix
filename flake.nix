@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    systems.url = "github:nix-systems/default";
 
     niri-unstable.url = "github:niri-wm/niri";
     niri-unstable.flake = false;
@@ -15,14 +14,28 @@
     inputs@{
       self,
       nixpkgs,
-      systems,
       ...
     }:
     let
       inherit (nixpkgs) lib;
+      inherit (lib) genAttrs;
       kdl = import ./kdl.nix { inherit lib; };
-      forAllSystems = f: nixpkgs.lib.genAttrs (import systems) f;
-      pkgsFor = system: nixpkgs.legacyPackages.${system};
+
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      forEachSystem =
+        perSystem:
+        genAttrs systems (
+          system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          perSystem { inherit pkgs system; }
+        );
+
       fmtDate =
         raw:
         let
@@ -252,10 +265,12 @@
         };
     in
     {
-      packages = forAllSystems (system: {
-        niri-unstable = mkNiri (pkgsFor system) inputs.niri-unstable;
-        xwayland-satellite-unstable = mkXwaylandSatellite (pkgsFor system) inputs.xwayland-satellite-unstable;
-      });
+      packages = forEachSystem (
+        { pkgs, ... }: {
+          niri-unstable = mkNiri pkgs inputs.niri-unstable;
+          xwayland-satellite-unstable = mkXwaylandSatellite pkgs inputs.xwayland-satellite-unstable;
+        }
+      );
 
       overlays.default = final: _prev: {
         niri-unstable = mkNiri final inputs.niri-unstable;
