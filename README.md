@@ -1,7 +1,5 @@
 A Nix flake providing the [Niri](https://github.com/niri-wm/niri) scrollable-tiling Wayland compositor, its ecosystem, and NixOS/Home Manager modules.
 
-My Niri flake rewrite based on [sodiboo/niri-flake](https://github.com/sodiboo/niri-flake), tailored to match my personal needs.
-
 ## Features
 
 - **Niri** - Scrollable-tiling Wayland compositor
@@ -19,5 +17,4 @@ My Niri flake rewrite based on [sodiboo/niri-flake](https://github.com/sodiboo/n
 ## Credits
 
 - [Niri](https://github.com/niri-wm/niri) - The Wayland compositor
-- [sodiboo/niri-flake](https://github.com/sodiboo/niri-flake) - Original flake this is based on
 - [Xwayland Satellite](https://github.com/Supreeeme/xwayland-satellite) - Xwayland integration

@@ -1,0 +1,68 @@
+{
+  lib,
+  src,
+  rustPlatform,
+  makeBinaryWrapper,
+  pkg-config,
+  xwayland,
+  libxcb,
+  xcb-util-cursor,
+}:
+let
+  fmtDate =
+    raw:
+    let
+      year = builtins.substring 0 4 raw;
+      month = builtins.substring 4 2 raw;
+      day = builtins.substring 6 2 raw;
+    in
+    "${year}-${month}-${day}";
+in
+rustPlatform.buildRustPackage {
+  pname = "xwayland-satellite";
+  version = "unstable-${fmtDate src.lastModifiedDate}-${src.shortRev}";
+
+  inherit src;
+
+  cargoLock.lockFile = "${src}/Cargo.lock";
+  cargoLock.allowBuiltinFetchGit = true;
+
+  nativeBuildInputs = [
+    makeBinaryWrapper
+    pkg-config
+    rustPlatform.bindgenHook
+  ];
+
+  buildInputs = [
+    libxcb
+    xcb-util-cursor
+  ];
+
+  buildNoDefaultFeatures = true;
+  buildFeatures = [ "systemd" ];
+
+  doCheck = false;
+
+  patches = [ ../patches/xwayland-satellite.patch ];
+
+  VERGEN_GIT_DESCRIBE = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
+
+  postInstall = ''
+    wrapProgram $out/bin/xwayland-satellite \
+      --prefix PATH : "${lib.makeBinPath [ xwayland ]}"
+    install -Dm0644 resources/xwayland-satellite.service -t $out/lib/systemd/user
+  '';
+
+  postFixup = ''
+    substituteInPlace $out/lib/systemd/user/xwayland-satellite.service \
+      --replace-fail /usr/local/bin $out/bin
+  '';
+
+  meta = {
+    description = "Rootless Xwayland integration to any Wayland compositor implementing xdg_wm_base";
+    homepage = "https://github.com/Supreeeme/xwayland-satellite";
+    license = lib.licenses.mpl20;
+    mainProgram = "xwayland-satellite";
+    platforms = lib.platforms.linux;
+  };
+}
