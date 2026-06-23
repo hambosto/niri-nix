@@ -10,7 +10,7 @@ let
 
   validatedConfig =
     package: settings:
-    pkgs.runCommand "niri-config.kdl"
+    pkgs.runCommand "config.kdl"
       {
         passAsFile = [ "kdl" ];
         kdl = toKDL settings;
