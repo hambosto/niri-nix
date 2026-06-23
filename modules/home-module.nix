@@ -24,7 +24,10 @@ in
   options.programs.niri = {
     enable = lib.mkEnableOption "niri";
 
-    package = lib.mkPackageOption pkgs "niri" { };
+    package = lib.mkOption {
+      type = lib.types.nullOr lib.types.package;
+      description = "The niri package to use.";
+    };
 
     settings = lib.mkOption {
       type =
