@@ -7,16 +7,24 @@
 let
   cfg = config.programs.niri;
   toKDL = lib.hm.generators.toKDL { };
-in
 
+  validatedConfig =
+    package: settings:
+    pkgs.runCommand "niri-config.kdl"
+      {
+        passAsFile = [ "kdl" ];
+        kdl = toKDL settings;
+      }
+      ''
+        ${lib.getExe package} validate -c "$kdlPath"
+        cp "$kdlPath" "$out"
+      '';
+in
 {
   options.programs.niri = {
     enable = lib.mkEnableOption "niri";
 
-    package = lib.mkOption {
-      type = lib.types.nullOr lib.types.package;
-      description = "The niri package to use.";
-    };
+    package = lib.mkPackageOption pkgs "niri" { };
 
     settings = lib.mkOption {
       type =
@@ -36,28 +44,22 @@ in
               description = "Niri configuration value";
             };
         in
-        types.submodule {
-          freeformType = valueType;
-        };
+        submodule { freeformType = valueType; };
       default = { };
-      description = ''
-        KDL configuration for Niri written in Nix.
-      '';
+      description = "KDL configuration for niri written in Nix.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    xdg.configFile = {
-      "niri/config.kdl" = lib.mkIf (cfg.settings != { }) {
-        source =
-          let
-            configFile = pkgs.writeText "config.kdl" (toKDL cfg.settings);
-          in
-          pkgs.runCommand "config.kdl" { } ''
-            ${lib.getExe cfg.package} validate -c ${configFile}
-            cp ${configFile} $out
-          '';
-      };
+    assertions = [
+      {
+        assertion = cfg.package != null;
+        message = "programs.niri.package must not be null when programs.niri.enable is true.";
+      }
+    ];
+
+    xdg.configFile."niri/config.kdl" = lib.mkIf (cfg.settings != { }) {
+      source = validatedConfig cfg.package cfg.settings;
     };
   };
 }
