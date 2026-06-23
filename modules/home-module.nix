@@ -6,11 +6,7 @@
 }:
 let
   cfg = config.programs.niri;
-  hm = fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/6716d811e5f6a0b9f014af3dcdfb9571e383e8cc.tar.gz";
-    sha256 = "1c5xlhvn28770rlrq1q333s25696b83xbg3s7vp165jypz8gbaml";
-  };
-  toKDL = (import "${hm}/modules/lib/generators.nix" { inherit lib; }).toKDL { };
+  toKDL = lib.hm.generators.toKDL { };
 in
 
 {
