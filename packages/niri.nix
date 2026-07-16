@@ -15,6 +15,7 @@
   seatd,
   systemdLibs,
   wayland,
+  rust-jemalloc-sys,
 }:
 let
   fmtDate =
@@ -53,6 +54,7 @@ rustPlatform.buildRustPackage {
     seatd
     systemdLibs
     wayland
+    rust-jemalloc-sys
   ];
 
   runtimeDependencies = [
