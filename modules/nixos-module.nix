@@ -57,7 +57,7 @@ in
         "org.freedesktop.impl.portal.Notification" = "gtk";
         "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
       };
-      extraPortals = [ pkgs.xdg-xdg-desktop-portal-luminous ];
+      extraPortals = [ pkgs.xdg-desktop-portal-luminous ];
     };
   };
 }
