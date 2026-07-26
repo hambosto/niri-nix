@@ -4,14 +4,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    niri-unstable.url = "github:niri-wm/niri";
-    niri-unstable.flake = false;
+    niri.url = "github:niri-wm/niri";
+    niri.flake = false;
 
-    niri-screenshare-unstable.url = "github:pantarune/niri-screenshare";
-    niri-screenshare-unstable.flake = false;
+    xdg-desktop-portal-generic.url = "github:lamco-admin/xdg-desktop-portal-generic";
+    xdg-desktop-portal-generic.flake = false;
 
-    xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
-    xwayland-satellite-unstable.flake = false;
+    xwayland-satellite.url = "github:Supreeeme/xwayland-satellite";
+    xwayland-satellite.flake = false;
   };
 
   outputs =
@@ -40,50 +40,46 @@
       packages = forEachSystem (
         { pkgs, ... }:
         {
-          niri-unstable = pkgs.callPackage ./packages/niri.nix {
-            src = inputs.niri-unstable;
+          niri = pkgs.callPackage ./packages/niri.nix {
+            src = inputs.niri;
           };
 
-          niri-screenshare-unstable = pkgs.callPackage ./packages/niri-screenshare.nix {
-            src = inputs.niri-screenshare-unstable;
+          xdg-desktop-portal-generic = pkgs.callPackage ./packages/xdg-desktop-portal-generic.nix {
+            src = inputs.xdg-desktop-portal-generic;
           };
 
-          xwayland-satellite-unstable = pkgs.callPackage ./packages/xwayland-satellite.nix {
-            src = inputs.xwayland-satellite-unstable;
+          xwayland-satellite = pkgs.callPackage ./packages/xwayland-satellite.nix {
+            src = inputs.xwayland-satellite;
           };
         }
       );
 
       overlays.default = final: prev: {
-        niri-unstable = final.callPackage ./packages/niri.nix {
-          src = inputs.niri-unstable;
+        niri = final.callPackage ./packages/niri.nix {
+          src = inputs.niri;
         };
 
-        niri-screenshare-unstable = final.callPackage ./packages/niri-screenshare.nix {
-          src = inputs.niri-screenshare-unstable;
+        xdg-desktop-portal-generic = final.callPackage ./packages/xdg-desktop-portal-generic.nix {
+          src = inputs.xdg-desktop-portal-generic;
         };
 
         xwayland-satellite-unstable = final.callPackage ./packages/xwayland-satellite.nix {
-          src = inputs.xwayland-satellite-unstable;
+          src = inputs.xwayland-satellite;
         };
       };
 
       nixosModules.default = { lib, pkgs, ... }: {
         imports = [ ./modules/nixos-module.nix ];
-        programs.niri.package =
-          lib.mkDefault
-            self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
+        programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
 
         programs.niri.portalPackage =
           lib.mkDefault
-            self.packages.${pkgs.stdenv.hostPlatform.system}.niri-screenshare-unstable;
+            self.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-generic;
       };
 
       homeManagerModules.default = { lib, pkgs, ... }: {
         imports = [ ./modules/home-module.nix ];
-        programs.niri.package =
-          lib.mkDefault
-            self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
+        programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
       };
     };
 }

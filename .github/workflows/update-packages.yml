@@ -37,17 +37,17 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: gh pr checkout ${{ steps.update.outputs.pull-request-number }}
 
-      - name: Push niri-unstable to Cachix
+      - name: Push niri to Cachix
         if: steps.update.outputs.pull-request-number != ''
-        run: nix build --no-link --print-out-paths .#niri-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+        run: nix build --no-link --print-out-paths .#niri | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
-      - name: Push niri-screenshare-unstable to Cachix
+      - name: Push xdg-desktop-portal-generic to Cachix
         if: steps.update.outputs.pull-request-number != ''
-        run: nix build --no-link --print-out-paths .#niri-screenshare-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+        run: nix build --no-link --print-out-paths .#xdg-desktop-portal-generic | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
-      - name: Push xwayland-satellite-unstable to Cachix
+      - name: Push xwayland-satellite to Cachix
         if: steps.update.outputs.pull-request-number != ''
-        run: nix build --no-link --print-out-paths .#xwayland-satellite-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+        run: nix build --no-link --print-out-paths .#xwayland-satellite | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
       - name: Auto-merge flake.lock PR
         if: steps.update.outputs.pull-request-number != ''

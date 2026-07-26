@@ -3,7 +3,7 @@ A Nix flake providing the [Niri](https://github.com/niri-wm/niri) scrollable-til
 ## Features
 
 - **Niri** - Scrollable-tiling Wayland compositor
-- **Niri Screenshare** - xdg-desktop-portal backend implementing ScreenCast
+- **XDG Desktop Portal Generic** - Generic portal backend for ScreenCast and file chooser
 - **Xwayland Satellite** - Rootless Xwayland integration for any Wayland compositor
 - **NixOS Module** - System-wide installation with portal configuration
 - **Shell Completions** - Bash, Zsh, Fish, and Nushell completions
@@ -12,12 +12,21 @@ A Nix flake providing the [Niri](https://github.com/niri-wm/niri) scrollable-til
 
 | Package | Description |
 |---------|-------------|
-| `niri-unstable` | Niri compositor from git (unstable) |
-| `niri-screenshare-unstable` | Portal backend for ScreenCast from git (unstable) |
-| `xwayland-satellite-unstable` | Xwayland satellite from git (unstable) |
+| `niri` | Niri compositor from git |
+| `xdg-desktop-portal-generic` | Generic XDG Desktop Portal backend from git |
+| `xwayland-satellite` | Xwayland satellite from git |
+
+## NixOS Module
+
+The module provides `programs.niri` with the following options:
+
+- `programs.niri.enable` - Enable the Niri compositor
+- `programs.niri.package` - The Niri package to use (default: `niri`)
+- `programs.niri.portalPackage` - The portal package to use (default: `xdg-desktop-portal-generic`)
+- `programs.niri.useNautilus` - Use Nautilus as file-chooser (default: `true`)
 
 ## Credits
 
 - [Niri](https://github.com/niri-wm/niri) - The Wayland compositor
-- [Niri Screenshare](https://github.com/pantarune/niri-screenshare) - ScreenCast portal backend
+- [XDG Desktop Portal Generic](https://github.com/lamco-admin/xdg-desktop-portal-generic) - Generic portal backend
 - [Xwayland Satellite](https://github.com/Supreeeme/xwayland-satellite) - Xwayland integration
