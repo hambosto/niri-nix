@@ -56,13 +56,8 @@ in
         "org.freedesktop.impl.portal.FileChooser" = lib.mkIf (!cfg.useNautilus) "gtk";
         "org.freedesktop.impl.portal.Notification" = "gtk";
         "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
-        "org.freedesktop.impl.portal.RemoteDesktop" = "generic";
-        "org.freedesktop.impl.portal.ScreenCast" = "generic";
-        "org.freedesktop.impl.portal.Clipboard" = "generic";
-        "org.freedesktop.impl.portal.Settings" = "generic";
-        "org.freedesktop.impl.portal.Screenshot" = "generic";
       };
-      extraPortals = [ cfg.portalPackage ];
+      extraPortals = [ pkgs.xdg-xdg-desktop-portal-luminous ];
     };
   };
 }
