@@ -1,0 +1,11 @@
+diff --git a/resources/niri-portals.conf b/resources/niri-portals.conf
+index 3f13d66..a79c5aa 100644
+--- a/resources/niri-portals.conf
++++ b/resources/niri-portals.conf
+@@ -1,5 +1,6 @@
+ [preferred]
+ default=gnome;gtk;
+ org.freedesktop.impl.portal.Access=gtk;
++org.freedesktop.impl.portal.FileChooser=gtk;
+ org.freedesktop.impl.portal.Notification=gtk;
+ org.freedesktop.impl.portal.Secret=gnome-keyring;

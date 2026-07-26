@@ -7,9 +7,6 @@
     niri.url = "github:niri-wm/niri";
     niri.flake = false;
 
-    xdg-desktop-portal-generic.url = "github:lamco-admin/xdg-desktop-portal-generic";
-    xdg-desktop-portal-generic.flake = false;
-
     xwayland-satellite.url = "github:Supreeeme/xwayland-satellite";
     xwayland-satellite.flake = false;
   };
@@ -44,10 +41,6 @@
             src = inputs.niri;
           };
 
-          xdg-desktop-portal-generic = pkgs.callPackage ./packages/xdg-desktop-portal-generic.nix {
-            src = inputs.xdg-desktop-portal-generic;
-          };
-
           xwayland-satellite = pkgs.callPackage ./packages/xwayland-satellite.nix {
             src = inputs.xwayland-satellite;
           };
@@ -59,10 +52,6 @@
           src = inputs.niri;
         };
 
-        xdg-desktop-portal-generic = final.callPackage ./packages/xdg-desktop-portal-generic.nix {
-          src = inputs.xdg-desktop-portal-generic;
-        };
-
         xwayland-satellite = final.callPackage ./packages/xwayland-satellite.nix {
           src = inputs.xwayland-satellite;
         };
@@ -71,9 +60,6 @@
       nixosModules.default = { lib, pkgs, ... }: {
         imports = [ ./modules/nixos-module.nix ];
         programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
-        programs.niri.portalPackage =
-          lib.mkDefault
-            self.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-generic;
       };
 
       homeManagerModules.default = { lib, pkgs, ... }: {
