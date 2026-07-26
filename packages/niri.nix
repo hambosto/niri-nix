@@ -69,10 +69,7 @@ rustPlatform.buildRustPackage {
 
   doCheck = false;
 
-  patches = [
-    ../patches/niri-portals.patch
-    ../patches/niri.patch
-  ];
+  patches = [ ../patches/niri.patch ];
 
   NIRI_BUILD_VERSION_STRING = "unstable ${fmtDate src.lastModifiedDate} (commit ${src.rev})";
 
