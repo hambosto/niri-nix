@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "niri-screenshare-unstable": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784921195,
+        "narHash": "sha256-O+qbHqqjP87C+2zeN8LszwttBTYH/TsbtqSH0puUPAc=",
+        "owner": "pantarune",
+        "repo": "niri-screenshare",
+        "rev": "2a196f39c16d1bc0b1becda00b985f8072e69a4c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pantarune",
+        "repo": "niri-screenshare",
+        "type": "github"
+      }
+    },
     "niri-unstable": {
       "flake": false,
       "locked": {
@@ -34,6 +50,7 @@
     },
     "root": {
       "inputs": {
+        "niri-screenshare-unstable": "niri-screenshare-unstable",
         "niri-unstable": "niri-unstable",
         "nixpkgs": "nixpkgs",
         "xwayland-satellite-unstable": "xwayland-satellite-unstable"
