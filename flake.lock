@@ -36,24 +36,7 @@
       "inputs": {
         "niri": "niri",
         "nixpkgs": "nixpkgs",
-        "xdg-desktop-portal-generic": "xdg-desktop-portal-generic",
         "xwayland-satellite": "xwayland-satellite"
-      }
-    },
-    "xdg-desktop-portal-generic": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1783482742,
-        "narHash": "sha256-vkMNGWoPMffQnJrRVgvs6O8nxbtd38SN2KPF3SefM6E=",
-        "owner": "lamco-admin",
-        "repo": "xdg-desktop-portal-generic",
-        "rev": "2f9b78acd83cb248652c852875b333a0721e85c7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "lamco-admin",
-        "repo": "xdg-desktop-portal-generic",
-        "type": "github"
       }
     },
     "xwayland-satellite": {
