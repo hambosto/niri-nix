@@ -41,6 +41,10 @@ jobs:
         if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#niri-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
 
+      - name: Push niri-screenshare-unstable to Cachix
+        if: steps.update.outputs.pull-request-number != ''
+        run: nix build --no-link --print-out-paths .#niri-screenshare-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}
+
       - name: Push xwayland-satellite-unstable to Cachix
         if: steps.update.outputs.pull-request-number != ''
         run: nix build --no-link --print-out-paths .#xwayland-satellite-unstable | cachix push ${{ secrets.CACHIX_CACHE_NAME }}

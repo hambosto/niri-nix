@@ -18,6 +18,11 @@ in
       description = "The niri package to use.";
     };
 
+    portalPackage = lib.mkOption {
+      type = lib.types.nullOr lib.types.package;
+      description = "The portal package to use.";
+    };
+
     useNautilus = lib.mkEnableOption "Nautilus as file-chooser for xdg-desktop-portal-gnome" // {
       default = true;
     };
@@ -55,7 +60,7 @@ in
         "org.freedesktop.impl.portal.Notification" = "gtk";
         "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
       };
-      extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+      extraPortals = [ cfg.portalPackage ];
     };
   };
 }

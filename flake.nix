@@ -7,6 +7,9 @@
     niri-unstable.url = "github:niri-wm/niri";
     niri-unstable.flake = false;
 
+    niri-screenshare-unstable.url = "github:pantarune/niri-screenshare";
+    niri-screenshare-unstable.flake = false;
+
     xwayland-satellite-unstable.url = "github:Supreeeme/xwayland-satellite";
     xwayland-satellite-unstable.flake = false;
   };
@@ -40,6 +43,11 @@
           niri-unstable = pkgs.callPackage ./packages/niri.nix {
             src = inputs.niri-unstable;
           };
+
+          niri-screenshare-unstable = pkgs.callPackage ./packages/niri-screenshare.nix {
+            src = inputs.niri-screenshare-unstable;
+          };
+
           xwayland-satellite-unstable = pkgs.callPackage ./packages/xwayland-satellite.nix {
             src = inputs.xwayland-satellite-unstable;
           };
@@ -50,6 +58,11 @@
         niri-unstable = final.callPackage ./packages/niri.nix {
           src = inputs.niri-unstable;
         };
+
+        niri-screenshare-unstable = final.callPackage ./packages/niri-screenshare.nix {
+          src = inputs.niri-screenshare-unstable;
+        };
+
         xwayland-satellite-unstable = final.callPackage ./packages/xwayland-satellite.nix {
           src = inputs.xwayland-satellite-unstable;
         };
@@ -60,6 +73,10 @@
         programs.niri.package =
           lib.mkDefault
             self.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
+
+        programs.niri.portalPackage =
+          lib.mkDefault
+            self.packages.${pkgs.stdenv.hostPlatform.system}.niri-screenshare-unstable;
       };
 
       homeManagerModules.default = { lib, pkgs, ... }: {
