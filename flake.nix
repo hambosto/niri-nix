@@ -57,13 +57,13 @@
         };
       };
 
-      nixosModules.default = { lib, pkgs, ... }: {
-        imports = [ ./modules/nixos-module.nix ];
+      homeManagerModules.default = { lib, pkgs, ... }: {
+        imports = [ ./modules/home-module.nix ];
         programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
       };
 
-      homeManagerModules.default = { lib, pkgs, ... }: {
-        imports = [ ./modules/home-module.nix ];
+      nixosModules.default = { lib, pkgs, ... }: {
+        imports = [ ./modules/nixos-module.nix ];
         programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
       };
     };
