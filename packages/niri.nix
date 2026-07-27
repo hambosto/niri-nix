@@ -5,7 +5,7 @@
   autoPatchelfHook,
   installShellFiles,
   pkg-config,
-  libdisplay-info,
+  libdisplay-info_0_3,
   libgbm,
   libglvnd,
   libinput,
@@ -43,7 +43,7 @@ rustPlatform.buildRustPackage {
   ];
 
   buildInputs = [
-    libdisplay-info
+    libdisplay-info_0_3
     libgbm
     libglvnd
     libinput
