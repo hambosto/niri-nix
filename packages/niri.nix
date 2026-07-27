@@ -5,7 +5,7 @@
   autoPatchelfHook,
   installShellFiles,
   pkg-config,
-  libdisplay-info_0_3,
+  libdisplay-info,
   libgbm,
   libglvnd,
   libinput,
@@ -15,6 +15,7 @@
   seatd,
   systemdLibs,
   wayland,
+  fetchFromGitLab,
 }:
 let
   fmtDate =
@@ -25,6 +26,23 @@ let
       day = builtins.substring 6 2 raw;
     in
     "${year}-${month}-${day}";
+
+  # TEMPORARY OVERRIDE: nixpkgs' `libdisplay-info` is now 0.4, but this niri
+  # unstable snapshot only supports the 0.3.x API. There's a nixpkgs PR/branch
+  # adding a dedicated `libdisplay-info_0_3` package for exactly this case —
+  # once that merges into nixos-unstable, drop this override and switch to
+  # `libdisplay-info_0_3` from the function args instead (remove this `let`
+  # block and add `libdisplay-info_0_3` to the top-level parameters).
+  libdisplay-info_0_3 = libdisplay-info.overrideAttrs (finalAttrs: {
+    version = "0.3.0";
+    src = fetchFromGitLab {
+      domain = "gitlab.freedesktop.org";
+      owner = "emersion";
+      repo = "libdisplay-info";
+      rev = finalAttrs.version;
+      sha256 = "sha256-nXf2KGovNKvcchlHlzKBkAOeySMJXgxMpbi5z9gLrdc=";
+    };
+  });
 in
 rustPlatform.buildRustPackage {
   pname = "niri";
