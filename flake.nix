@@ -4,6 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
+    rust-overlay.url = "github:oxalica/rust-overlay/stable";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+
     niri.url = "github:niri-wm/niri";
     niri.flake = false;
 
@@ -15,6 +18,7 @@
     inputs@{
       self,
       nixpkgs,
+      rust-overlay,
       ...
     }:
     let
@@ -23,26 +27,40 @@
         "x86_64-linux"
         "aarch64-linux"
       ];
+
+      mkRustPlatform =
+        pkgs:
+        pkgs.makeRustPlatform {
+          cargo = pkgs.rust-bin.stable.latest.default;
+          rustc = pkgs.rust-bin.stable.latest.default;
+        };
+
       forEachSystem =
         perSystem:
         lib.genAttrs systems (
           system:
           let
-            pkgs = nixpkgs.legacyPackages.${system};
+            pkgs = import nixpkgs {
+              inherit system;
+              overlays = [ rust-overlay.overlays.default ];
+            };
+            rustPlatform = mkRustPlatform pkgs;
           in
-          perSystem { inherit pkgs system; }
+          perSystem { inherit pkgs system rustPlatform; }
         );
     in
     {
       packages = forEachSystem (
-        { pkgs, ... }:
+        { pkgs, rustPlatform, ... }:
         {
           niri = pkgs.callPackage ./packages/niri.nix {
             src = inputs.niri;
+            inherit rustPlatform;
           };
 
           xwayland-satellite = pkgs.callPackage ./packages/xwayland-satellite.nix {
             src = inputs.xwayland-satellite;
+            inherit rustPlatform;
           };
         }
       );
@@ -50,10 +68,12 @@
       overlays.default = final: prev: {
         niri = final.callPackage ./packages/niri.nix {
           src = inputs.niri;
+          rustPlatform = mkRustPlatform final;
         };
 
         xwayland-satellite = final.callPackage ./packages/xwayland-satellite.nix {
           src = inputs.xwayland-satellite;
+          rustPlatform = mkRustPlatform final;
         };
       };
 
