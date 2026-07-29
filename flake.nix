@@ -37,13 +37,6 @@
       ];
 
       forEachSystem = f: lib.genAttrs systems (system: f system);
-
-      mkRustPlatform =
-        pkgs:
-        pkgs.makeRustPlatform {
-          cargo = pkgs.rust-bin.stable.latest.default;
-          rustc = pkgs.rust-bin.stable.latest.default;
-        };
     in
     {
       packages = forEachSystem (
@@ -53,7 +46,10 @@
             inherit system;
             overlays = [ rust-overlay.overlays.default ];
           };
-          rustPlatform = mkRustPlatform pkgs;
+          rustPlatform = pkgs.makeRustPlatform {
+            cargo = pkgs.rust-bin.stable.latest.default;
+            rustc = pkgs.rust-bin.stable.latest.default;
+          };
         in
         {
           niri = pkgs.callPackage ./packages/niri.nix {
@@ -71,9 +67,10 @@
       overlays.default =
         final: prev:
         let
-          rustPlatform = final.makeRustPlatform {
-            cargo = final.rust-bin.stable.latest.default;
-            rustc = final.rust-bin.stable.latest.default;
+          rustPkgs = prev.extend rust-overlay.overlays.default;
+          rustPlatform = rustPkgs.makeRustPlatform {
+            cargo = rustPkgs.rust-bin.stable.latest.default;
+            rustc = rustPkgs.rust-bin.stable.latest.default;
           };
         in
         {
