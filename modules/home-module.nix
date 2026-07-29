@@ -8,7 +8,10 @@ let
   cfg = config.wayland.windowManager.niri;
 in
 {
-  disabledModules = [ "services/window-managers/niri.nix" ];
+  disabledModules = [
+    "services/window-managers/niri.nix"
+    "services/way-displays.nix"
+  ];
 
   options.wayland.windowManager.niri = {
     enable = lib.mkEnableOption "niri";
