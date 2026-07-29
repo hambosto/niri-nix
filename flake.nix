@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    rust-overlay.url = "github:oxalica/rust-overlay/stable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
     niri.url = "github:niri-wm/niri";
@@ -65,17 +65,20 @@
         }
       );
 
-      overlays.default = final: prev: {
-        niri = final.callPackage ./packages/niri.nix {
-          src = inputs.niri;
-          rustPlatform = mkRustPlatform final;
-        };
+      overlays.default = lib.composeManyExtensions [
+        rust-overlay.overlays.default
+        (final: prev: {
+          niri = final.callPackage ./packages/niri.nix {
+            src = inputs.niri;
+            rustPlatform = mkRustPlatform final;
+          };
 
-        xwayland-satellite = final.callPackage ./packages/xwayland-satellite.nix {
-          src = inputs.xwayland-satellite;
-          rustPlatform = mkRustPlatform final;
-        };
-      };
+          xwayland-satellite = final.callPackage ./packages/xwayland-satellite.nix {
+            src = inputs.xwayland-satellite;
+            rustPlatform = mkRustPlatform final;
+          };
+        })
+      ];
 
       homeManagerModules.default = import ./modules/home-module.nix;
       nixosModules.default = import ./modules/nixos-module.nix;
