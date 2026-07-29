@@ -59,7 +59,9 @@
 
       homeManagerModules.default = { lib, pkgs, ... }: {
         imports = [ ./modules/home-module.nix ];
-        programs.niri.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
+        wayland.windowManager.niri.package =
+          lib.mkDefault
+            self.packages.${pkgs.stdenv.hostPlatform.system}.niri;
       };
 
       nixosModules.default = { lib, pkgs, ... }: {
