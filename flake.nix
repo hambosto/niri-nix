@@ -36,19 +36,15 @@
         "aarch64-linux"
       ];
 
-      forEachSystem = f: lib.genAttrs systems (system: f system);
-    in
-    {
-      packages = forEachSystem (
-        system:
+      forEachSystem = f: lib.genAttrs systems f;
+
+      mkPackages =
+        pkgs:
         let
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays = [ rust-overlay.overlays.default ];
-          };
-          rustPlatform = pkgs.makeRustPlatform {
-            cargo = pkgs.rust-bin.stable.latest.default;
-            rustc = pkgs.rust-bin.stable.latest.default;
+          rustPkgs = pkgs.extend rust-overlay.overlays.default;
+          rustPlatform = rustPkgs.makeRustPlatform {
+            cargo = rustPkgs.rust-bin.stable.latest.default;
+            rustc = rustPkgs.rust-bin.stable.latest.default;
           };
         in
         {
@@ -61,29 +57,18 @@
             inherit rustPlatform;
             src = xwayland-satellite;
           };
-        }
+        };
+    in
+    {
+      packages = forEachSystem (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        mkPackages pkgs
       );
 
-      overlays.default =
-        final: prev:
-        let
-          rustPkgs = prev.extend rust-overlay.overlays.default;
-          rustPlatform = rustPkgs.makeRustPlatform {
-            cargo = rustPkgs.rust-bin.stable.latest.default;
-            rustc = rustPkgs.rust-bin.stable.latest.default;
-          };
-        in
-        {
-          niri = final.callPackage ./packages/niri.nix {
-            inherit rustPlatform;
-            src = niri;
-          };
-
-          xwayland-satellite = final.callPackage ./packages/xwayland-satellite.nix {
-            inherit rustPlatform;
-            src = xwayland-satellite;
-          };
-        };
+      overlays.default = final: prev: mkPackages final;
 
       homeManagerModules.default = import ./modules/home-module.nix;
       nixosModules.default = import ./modules/nixos-module.nix;
