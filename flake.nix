@@ -61,7 +61,7 @@
         }
       );
 
-      homeManagerModules.default = import ./modules/home-module.nix { };
-      nixosModules.default = import ./modules/nixos-module.nix { };
+      homeManagerModules.default = import ./modules/home-module.nix;
+      nixosModules.default = import ./modules/nixos-module.nix;
     };
 }
