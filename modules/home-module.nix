@@ -5,15 +5,10 @@
   ...
 }:
 let
-  cfg = config.wayland.windowManager.niri;
+  cfg = config.programs.niri;
 in
 {
-  disabledModules = [
-    "services/window-managers/niri.nix"
-    "services/way-displays.nix"
-  ];
-
-  options.wayland.windowManager.niri = {
+  options.programs.niri = {
     enable = lib.mkEnableOption "niri";
 
     package = lib.mkPackageOption pkgs "niri" {
