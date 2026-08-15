@@ -112,7 +112,7 @@ in
           escapeBackslashes = true;
           escapeTabs = true;
         };
-        settings = lib.trim (toKDL cfg.settings);
+        settings = lib.removeSuffix "\n" (toKDL cfg.settings);
         configLines = lib.concatStringsSep "\n" (
           lib.filter (line: line != "") [
             settings
